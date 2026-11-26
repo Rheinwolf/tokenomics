@@ -1,5 +1,5 @@
 // Parses every hooks file, so a syntax error is caught before the app refuses the mod.
-// Run: node test/syntax.check.ts
+// Run: node --test test/syntax.test.ts
 import { readFileSync, readdirSync } from 'node:fs'
 import { stripTypeScriptTypes } from 'node:module'
 

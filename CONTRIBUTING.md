@@ -30,14 +30,13 @@ You need [Node.js](https://nodejs.org/) 22.18 or newer to run the checks. There 
 
 ### Checks
 
-Run all four before every pull request:
+Run them before every pull request:
 
 ```
-node test/syntax.check.ts
-node test/version.check.ts
-node test/lang.check.ts
-node test/format.check.ts
+node --test "test/*.test.ts"
 ```
+
+For a coverage report add `--experimental-test-coverage`. The same checks run automatically on GitHub (Ubuntu, Windows, macOS) for every push and pull request; see `.github/workflows/ci.yml`. New edge cases belong in `test/edge.test.ts`.
 
 ### Rules that matter
 
@@ -49,7 +48,7 @@ node test/format.check.ts
 
 ### Versions
 
-Every release changes the version in all of these, and `node test/version.check.ts` makes sure they match:
+Every release changes the version in all of these, and `test/version.test.ts` makes sure they match:
 
 - `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
 - `VERSION` in `hooks/explain.ts`

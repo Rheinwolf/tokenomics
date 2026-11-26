@@ -1,4 +1,4 @@
-// Every place that names the version must name the same one. Run: node test/version.check.ts
+// Every place that names the version must name the same one. Run: node --test test/version.test.ts
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { VERSION, EXPLAIN_LANGS } from '../hooks/explain.ts'

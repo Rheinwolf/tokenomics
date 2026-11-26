@@ -4,7 +4,7 @@
 
 ## Checklist
 
-- [ ] All four checks pass (`node test/syntax.check.ts`, `version.check.ts`, `lang.check.ts`, `format.check.ts`)
+- [ ] `node --test "test/*.test.ts"` passes
 - [ ] I tried it in Claude Code (`claude --plugin-dir .`) and the bar still shows
 - [ ] `$` is only passed to functions declared at the top of the file
 - [ ] No network access and no new programs (or README Privacy and SECURITY.md are updated)

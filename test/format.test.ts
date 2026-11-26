@@ -1,4 +1,4 @@
-// Sample-data checks for the formatter. Run: node test/format.check.ts
+// Sample-data checks for the formatter. Run: node --test test/format.test.ts
 import assert from 'node:assert/strict'
 import { baseName, duration, modelName, segments } from '../hooks/format.ts'
 

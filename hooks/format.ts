@@ -85,7 +85,7 @@ export function segments(i: Input): Segment[] {
   const full = i.detail === 'full'
   const compact = i.detail === 'compact'
 
-  if (typeof i.costUsd === 'number' && Number.isFinite(i.costUsd)) {
+  if (typeof i.costUsd === 'number' && Number.isFinite(i.costUsd) && i.costUsd >= 0) {
     let value = money(i.costUsd)
     if (i.currency && i.rate && i.rate > 0) {
       const rateNote = i.rateSource ? ` · ${i.rateSource}` : ` @ ${i.rate}`
@@ -104,7 +104,7 @@ export function segments(i: Input): Segment[] {
 
   for (const l of i.rateLimits) {
     const label = LIMIT_LABEL[l.kind]
-    if (!label || !Number.isFinite(l.percentUsed)) continue
+    if (!label || !Number.isFinite(l.percentUsed) || l.percentUsed < 0) continue
     const level = limitLevel(l.percentUsed)
     let text = `${mark(level)}${label} limit ${Math.round(l.percentUsed)}%`
     if (l.resetsAt && !compact && i.resets !== false) {
@@ -115,7 +115,7 @@ export function segments(i: Input): Segment[] {
     out.push({ key: `limit-${l.kind}`, text, level })
   }
 
-  if (typeof i.contextPercent === 'number' && Number.isFinite(i.contextPercent)) {
+  if (typeof i.contextPercent === 'number' && Number.isFinite(i.contextPercent) && i.contextPercent >= 0) {
     const level = contextLevel(i.contextPercent)
     out.push({ key: 'context', text: `${mark(level)}context ${Math.round(i.contextPercent)}%`, level })
   }
@@ -185,7 +185,7 @@ export function parseChanges(numstat: string, status: string): ChangedFile[] {
   for (const line of status.split(/\r?\n/)) {
     if (!line.startsWith('?? ')) continue
     const path = line.slice(3).replace(/^"|"$/g, '')
-    if (!files.some(f => f.path === path)) files.push({ path, added: 0, removed: 0, isNew: true, isBinary: false })
+    if (path && !files.some(f => f.path === path)) files.push({ path, added: 0, removed: 0, isNew: true, isBinary: false })
   }
   return files.sort((x, y) => y.added + y.removed - (x.added + x.removed) || x.path.localeCompare(y.path))
 }

@@ -1,4 +1,4 @@
-// Run: node test/lang.check.ts
+// Run: node --test test/lang.test.ts
 import assert from 'node:assert/strict'
 import { detectLanguage, parseLanguage } from '../hooks/lang.ts'
 

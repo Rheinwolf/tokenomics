@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1
+- Negative cost, limit or context values from Claude Code are now hidden instead of shown as `$-1.00` or `-1%`
+- An empty line in git's status output no longer adds a nameless entry to the changes pane
+- Tests run with Node's built-in test runner (`node --test "test/*.test.ts"`), with new edge-case tests: broken git output, NaN and negative values, limits above 100 %, Unicode names, incomplete ECB data
+- GitHub Actions runs all tests on Ubuntu, Windows and macOS for every push and pull request
+- Troubleshooting explains what happens when git is missing or slow, or you are offline
+
 ## 0.6.0
 - `/tokenomics-setup` now asks about every item on its own, with an explanation and an example, answered with Yes or No: usage limits, reset times, context, model, project + git, changed lines and session time. Replaces the detail levels and the multi-select step
 - `/tokenomics` is now a quick switch between a compact bar and your own selection (`/tokenomics compact` · `full`)

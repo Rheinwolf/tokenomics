@@ -2,12 +2,12 @@
 
 # Tokenomics
 
-**Version 0.6.0** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
+**Version 0.6.1** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.6.0  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.6.1  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -202,13 +202,10 @@ Found a security problem? Please report it privately, see [SECURITY.md](SECURITY
 ## Development
 
 ```
-node test/format.check.ts
-node test/lang.check.ts
-node test/syntax.check.ts
-node test/version.check.ts
+node --test "test/*.test.ts"
 ```
 
-runs the formatter against sample data (subscription, API billing, missing values, Windows paths).
+runs every check in `test/` with Node's built-in test runner: the formatter against sample data (subscription, API billing, missing values, Windows paths), edge cases (broken git output, NaN and negative values, limits above 100 %, Unicode names, incomplete ECB data), the translations, a syntax check and the version check. GitHub Actions runs the same on Ubuntu, Windows and macOS for every push and pull request.
 
 ## Contributing
 
