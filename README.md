@@ -1,5 +1,7 @@
 # Tokenomics
 
+**Version 0.4.0** · MIT license · [Changelog](CHANGELOG.md)
+
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
@@ -23,11 +25,14 @@ API value this session: $4.37 · covered by subscription  ·  5h limit 41% · re
 
 Any value the app does not provide is simply left out. Nothing is guessed.
 
-### Warnings
+### Traffic light
 Colour is never the only signal — a symbol is added too:
 
-- Limits: `△` + orange from 60 %, `▲` + red from 80 %
-- Context: `▲` + red from 80 %
+Limits (5h / 7d) and context use the same traffic light:
+
+- up to 50 %: green
+- up to 75 %: yellow + `△`
+- above 75 %: red + `▲`
 
 ## The cost figure
 
@@ -111,6 +116,7 @@ Reads local session data only. Sends nothing, loads nothing from the internet, s
 node test/format.check.ts
 node test/lang.check.ts
 node test/syntax.check.ts
+node test/version.check.ts
 ```
 
 runs the formatter against sample data (subscription, API billing, missing values, Windows paths).

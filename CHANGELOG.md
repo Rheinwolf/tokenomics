@@ -1,0 +1,17 @@
+# Changelog
+
+## 0.4.0
+- Traffic-light colours for limits and context: up to 50 % green, up to 75 % yellow (△), above red (▲)
+- `/tokenomics-explain` in all eight setup languages
+- Version number shown in `/tokenomics-explain`; version check across all files
+
+## 0.3.0
+- Separate commands: `/tokenomics-setup`, `/tokenomics-explain`, `/tokenomics-reset`
+- Setup asks for your language first (detected from your messages, any spelling); setup texts in 8 languages
+- Syntax check for all hooks files
+
+## 0.2.0
+- Guided setup in Claude's own question dialog; choices saved for every session
+
+## 0.1.0
+- First release: API cost / API value, 5h and 7d limits, context, model, project + git, session time

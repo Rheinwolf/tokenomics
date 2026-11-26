@@ -1,6 +1,6 @@
 {
   "name": "tokenomics",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Token economics at a glance: a calm bar above the Claude Code prompt with API cost (or API value on a subscription), 5h/7d limits, context, model, git and session time.",
   "license": "MIT"
 }

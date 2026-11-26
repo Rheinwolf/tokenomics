@@ -5,6 +5,7 @@ import { baseName, parseRate, segments } from './format.ts'
 import type { Segment } from './format.ts'
 import { byCode, detectLanguage, ENGLISH, parseLanguage } from './lang.ts'
 import type { Lang } from './lang.ts'
+import { explainText } from './explain.ts'
 
 type Detail = 'compact' | 'normal' | 'full'
 type Group = 'limits' | 'context' | 'model' | 'repo' | 'duration'
@@ -27,26 +28,6 @@ const tick = atom({ plugin: 'tokenomics', key: 'tick' } as const, 0)
 const configAtom = atom({ plugin: 'tokenomics', key: 'config' } as const, DEFAULTS as Config)
 const repoAtom = atom({ plugin: 'tokenomics', key: 'repo' } as const, null as Repo)
 
-const EXPLAIN = [
-  'Tokenomics: how the cost figure works',
-  '',
-  '- "API cost this session": you pay per token (API billing). The figure is a',
-  '  client-side estimate at list prices; your invoice is the final authority.',
-  '- "API value this session - covered by subscription": you are on a plan',
-  '  (detected because 5h/7d limit data is present). The figure is what this',
-  '  session would cost at API list prices. It is NOT billed, your plan price is',
-  '  not subtracted, and it covers this session only, so it is not a "saving".',
-  "- A trailing * means a model without a known price was counted at another model's rates.",
-  '- The second currency (if set) uses your fixed rate; no live rates are fetched.',
-  '  Tokenomics only reads local session data and sends nothing.',
-  '',
-  'Commands:',
-  '  /tokenomics-setup     step-by-step setup',
-  '  /tokenomics           cycle compact > normal > full',
-  '  /tokenomics full      jump to a level (compact, normal, full)',
-  '  /tokenomics-explain   this text',
-  '  /tokenomics-reset     back to defaults',
-].join('\n')
 
 function groupOf(key: string): Group | null {
   if (key.startsWith('limit-')) return 'limits'
@@ -209,6 +190,12 @@ async function resetCommand($: EngineInterface) {
   }
 }
 
+/** The explain text in the language chosen at setup. */
+async function explainCommand($: EngineInterface) {
+  const config = await read($, configAtom)
+  return { text: explainText(config.lang), isTextDisplayOnly: true as const }
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     try {
@@ -247,7 +234,7 @@ export const register: Register = on => {
 
   on('command.run', { command: 'tokenomics' }, async ($, e) => {
     const arg = e.args.trim().toLowerCase()
-    if (arg === 'explain' || arg === 'help') return { text: EXPLAIN, isTextDisplayOnly: true }
+    if (arg === 'explain' || arg === 'help') return explainCommand($)
     if (arg === 'setup') return setupCommand($)
     const current = await read($, configAtom)
     if (arg === 'reset') return resetCommand($)
@@ -260,7 +247,7 @@ export const register: Register = on => {
 
   on('command.run', { command: 'tokenomics-setup' }, async ($, e) => setupCommand($))
 
-  on('command.run', { command: 'tokenomics-explain' }, async ($, e) => ({ text: EXPLAIN, isTextDisplayOnly: true as const }))
+  on('command.run', { command: 'tokenomics-explain' }, async ($, e) => explainCommand($))
 
   on('command.run', { command: 'tokenomics-reset' }, async ($, e) => resetCommand($))
 
@@ -310,7 +297,7 @@ export const register: Register = on => {
       if (segs.length === 0) return next(e)
 
       const { Box, Text } = $.ui.resolve(e)
-      const color = (l: string) => (l === 'alert' ? 'error' : l === 'warn' ? 'warning' : undefined)
+      const color = (l: string) => (l === 'alert' ? 'error' : l === 'warn' ? 'warning' : l === 'good' ? 'success' : undefined)
       const row = h(
         Box,
         { flexDirection: 'row', flexWrap: 'wrap' },

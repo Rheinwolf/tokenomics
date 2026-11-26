@@ -55,3 +55,10 @@ assert.equal(modelName('claude-haiku-5-5[1m]'), 'Haiku 5.5')
 assert.equal(modelName('gpt-x'), 'gpt-x')
 assert.equal(duration(30000), '<1m'); assert.equal(duration(-5), '')
 console.log('\nAll checks passed.')
+
+// Traffic light: up to 50 % green, up to 75 % yellow, above red
+import { trafficLight } from '../hooks/format.ts'
+assert.equal(trafficLight(0), 'good'); assert.equal(trafficLight(50), 'good')
+assert.equal(trafficLight(50.5), 'warn'); assert.equal(trafficLight(75), 'warn')
+assert.equal(trafficLight(75.5), 'alert'); assert.equal(trafficLight(100), 'alert')
+console.log('Traffic light checks passed.')

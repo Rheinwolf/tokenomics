@@ -1,6 +1,6 @@
 // Pure formatting helpers: no engine access, easy to test.
 
-export type Level = 'ok' | 'warn' | 'alert'
+export type Level = 'ok' | 'good' | 'warn' | 'alert'
 
 export type Limit = { kind: string; percentUsed: number; resetsAt?: string }
 
@@ -46,13 +46,13 @@ export function money(usd: number): string {
   return `$${usd.toFixed(2)}`
 }
 
-export function limitLevel(p: number): Level {
-  return p >= 80 ? 'alert' : p >= 60 ? 'warn' : 'ok'
+/** Traffic light for anything that can run out: up to 50 % green, up to 75 % yellow, above red. */
+export function trafficLight(p: number): Level {
+  return p > 75 ? 'alert' : p > 50 ? 'warn' : 'good'
 }
 
-export function contextLevel(p: number): Level {
-  return p >= 80 ? 'alert' : 'ok'
-}
+export const limitLevel = trafficLight
+export const contextLevel = trafficLight
 
 /** Symbol added to the text so a warning never relies on colour alone. */
 export function mark(level: Level): string {

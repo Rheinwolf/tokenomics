@@ -1,5 +1,5 @@
 {
   "name": "tokenomics",
   "owner": { "name": "Rheinwolf" },
-  "plugins": [{ "name": "tokenomics", "source": "./" }]
+  "plugins": [{ "name": "tokenomics", "source": "./", "version": "0.4.0" }]
 }
