@@ -2,12 +2,12 @@
 
 # Tokenomics
 
-**Version 0.4.2** · MIT license · [Changelog](CHANGELOG.md)
+**Version 0.4.3** · MIT license · [Changelog](CHANGELOG.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.4.2  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.4.3  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -121,6 +121,21 @@ Your choices are saved and apply to every session. Until you run the setup, the 
 | Project folder | its name for the project segment | `$.session.root()` |
 | Git branch and uncommitted changes | the `project · branch ✗` segment and `+/− lines` | three read-only git commands run locally in the project folder: `git rev-parse --abbrev-ref HEAD`, `git status --porcelain`, `git diff --numstat HEAD` |
 | Your last chat messages (text only) | **only during `/tokenomics-setup`**, to guess your language for the pre-selected option; counted locally, never stored or sent | `$.session.messages()` |
+
+### Programs it runs
+
+Tokenomics starts exactly one program: **`git`**, and only these three read-only commands, written as fixed text in `hooks/register.ts` (function `refreshRepo`):
+
+| Command | Why |
+|---|---|
+| `git rev-parse --abbrev-ref HEAD` | the name of the current branch (e.g. `main`) |
+| `git status --porcelain` | whether there are uncommitted changes (the `✗`) |
+| `git diff --numstat HEAD` | how many lines were added and removed (`+120 / −30 lines`, full mode) |
+
+- They run in the project folder of the current session, at session start and after each turn, with a 5-second timeout.
+- They only read. They change nothing, contact no server (no `fetch`, `pull` or `push`) and their output is used only to draw the bar.
+- If git is not installed or the folder is not a git repository, the project segment simply shows the folder name.
+- To avoid them completely, untick **Project + git** in `/tokenomics-setup`.
 
 ### What it stores
 

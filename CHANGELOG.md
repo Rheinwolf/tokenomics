@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.3
+- README: new section "Programs it runs" listing the three read-only git commands and why
+- With Project + git switched off in the setup, no git command runs at all
+- Icon stays at `.claude-plugin/icon.png`; removed the `icon` field from the manifest (Claude Code does not read it)
+
 ## 0.4.2
 - Install name is now `tokenomics-bar` (the name `tokenomics` was already taken in the plugin directory); the bar and the `/tokenomics…` commands are unchanged
 - Git info now comes from three read-only local git commands instead of an experimental interface

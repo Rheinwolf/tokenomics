@@ -69,6 +69,8 @@ async function saveConfig($: EngineInterface, config: Config): Promise<void> {
 
 async function refreshRepo($: EngineInterface): Promise<void> {
   try {
+    // Project + git switched off in the setup: run no git command at all.
+    if ((await read($, configAtom)).hidden.includes('repo')) return
     const root = await $.session.root()
     const repo = { project: baseName(root), branch: null as string | null, dirty: false, added: 0, removed: 0 }
     // Three read-only git commands, run locally in the project folder. Nothing leaves the machine.
