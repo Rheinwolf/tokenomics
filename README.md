@@ -75,11 +75,12 @@ or add the folder to the `CLAUDE_CODE_PLUGIN_DIRS` environment variable.
 After installing, type:
 
 ```
-/tokenomics setup
+/tokenomics-setup
 ```
 
 A short guided setup opens in Claude's own question dialog and asks, one step at a time:
 
+0. **Language**: English is always offered, plus the language detected from your recent messages. You can also type any language, in English or in your own language ("German" or "Deutsch"). Setup texts are available in English, Deutsch, Français, Español, Italiano, Polski, Nederlands and Português; other languages fall back to English.
 1. **Detail level**
    - *Compact*: cost, limits and context only, no reset times
    - *Normal* (default): adds reset times, model, project + git branch and session time
@@ -94,7 +95,7 @@ Your choices are saved and apply to every session. Until you run the setup, the 
 
 | Command | What it does |
 |---|---|
-| `/tokenomics setup` | guided setup |
+| `/tokenomics-setup` | guided setup (also `/tokenomics setup`) |
 | `/tokenomics` | cycle compact → normal → full |
 | `/tokenomics compact` · `normal` · `full` | jump to a level |
 | `/tokenomics explain` | explain the cost figure |
@@ -108,6 +109,7 @@ Reads local session data only. Sends nothing, loads nothing from the internet, s
 
 ```
 node test/format.check.ts
+node test/lang.check.ts
 ```
 
 runs the formatter against sample data (subscription, API billing, missing values, Windows paths).

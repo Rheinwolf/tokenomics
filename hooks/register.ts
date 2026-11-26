@@ -3,6 +3,8 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { baseName, parseRate, segments } from './format.ts'
 import type { Segment } from './format.ts'
+import { byCode, detectLanguage, ENGLISH, parseLanguage } from './lang.ts'
+import type { Lang } from './lang.ts'
 
 type Detail = 'compact' | 'normal' | 'full'
 type Group = 'limits' | 'context' | 'model' | 'repo' | 'duration'
@@ -12,10 +14,11 @@ type Config = {
   rate: number | null
   hidden: Group[]
   isSetUp: boolean
+  lang: string
 }
 type Repo = { project: string; branch: string | null; dirty: boolean; added: number; removed: number } | null
 
-const DEFAULTS: Config = { detail: 'normal', currency: '', rate: null, hidden: [], isSetUp: false }
+const DEFAULTS: Config = { detail: 'normal', currency: '', rate: null, hidden: [], isSetUp: false, lang: 'en' }
 const STORE_KEY = 'config'
 const ORDER: Detail[] = ['compact', 'normal', 'full']
 const GROUPS: Group[] = ['limits', 'context', 'model', 'repo', 'duration']
@@ -38,7 +41,7 @@ const EXPLAIN = [
   '  Tokenomics only reads local session data and sends nothing.',
   '',
   'Commands:',
-  '  /tokenomics setup     step-by-step setup',
+  '  /tokenomics-setup     step-by-step setup',
   '  /tokenomics           cycle compact > normal > full',
   '  /tokenomics full      jump to a level (compact, normal, full)',
   '  /tokenomics explain   this text',
@@ -62,6 +65,7 @@ function sanitize(raw: unknown): Config {
     rate: typeof c.rate === 'number' && Number.isFinite(c.rate) && c.rate > 0 ? c.rate : null,
     hidden: Array.isArray(c.hidden) ? c.hidden.filter((g): g is Group => GROUPS.includes(g as Group)) : [],
     isSetUp: c.isSetUp === true,
+    lang: byCode(typeof c.lang === 'string' ? c.lang : 'en').code,
   }
 }
 
@@ -104,58 +108,67 @@ async function refreshRepo($: EngineInterface): Promise<void> {
   }
 }
 
+/** Text of the person's recent messages, for guessing their language. */
+async function recentUserText($: EngineInterface): Promise<string[]> {
+  try {
+    const r: unknown = await $.session.messages({ last: 60 })
+    const rows = Array.isArray(r) ? r : []
+    return rows
+      .filter((m: { role?: string; text?: string }) => m && m.role === 'user' && typeof m.text === 'string')
+      .map((m: { text: string }) => m.text)
+      .slice(-15)
+  } catch {
+    return []
+  }
+}
+
+/** Step 0: which language the setup speaks. English is always offered. */
+async function askLanguage($: EngineInterface, saved: string): Promise<Lang> {
+  const guess = detectLanguage(await recentUserText($)) ?? (saved !== 'en' ? byCode(saved) : null)
+  const second = guess && guess.code !== 'en' ? `${guess.endonym} (detected)` : 'Type your language under Other'
+  const answer = await $.ui.ask(
+    'Which language do you speak? Pick one, or type your language under Other, in English or in your own language (e.g. "German" or "Deutsch").',
+    { header: 'Language', options: ['English', second] },
+  )
+  return parseLanguage(answer) ?? ENGLISH
+}
+
+function pick<T extends string>(answer: string, labels: readonly T[]): number {
+  const i = labels.findIndex(l => l === answer.trim())
+  return i
+}
+
 /** The step-by-step setup, using the app's own question dialog. */
 async function runSetup($: EngineInterface): Promise<string> {
   const current = await read($, configAtom)
-  const config: Config = { ...current, isSetUp: true }
+  const lang = await askLanguage($, current.lang)
+  const t = lang.t
+  const config: Config = { ...current, isSetUp: true, lang: lang.code }
 
   // Step 1: detail level
-  const level = await $.ui.ask(
-    'Step 1/4 - How much should the bar show? ' +
-      'Compact: cost, limits and context only, no reset times. ' +
-      'Normal: adds reset times, model, project + git branch and session time. ' +
-      'Full: adds uncommitted lines (+/-) and a footnote explaining the cost figure.',
-    { header: 'Detail', options: ['Normal (recommended)', 'Compact', 'Full'] },
-  )
-  config.detail = level.startsWith('Compact') ? 'compact' : level.startsWith('Full') ? 'full' : 'normal'
+  const level = pick(await $.ui.ask(t.s1, { header: t.detail.slice(0, 12), options: t.s1o }), t.s1o)
+  config.detail = level === 1 ? 'compact' : level === 2 ? 'full' : 'normal'
 
   // Step 2: which segments
-  const shown = await $.ui.ask(
-    'Step 2/4 - Which extras should be visible? The cost figure always shows. ' +
-      'Limits = 5h/7d usage (subscriptions only). Context = how full the context window is, plus the model. ' +
-      'Project = folder name, git branch and ✗ for uncommitted changes. Tick what you want to see.',
-    {
-      header: 'Segments',
-      multiSelect: true,
-      options: ['Limits (5h / 7d)', 'Context + model', 'Project + git', 'Session time'],
-    },
-  )
+  const shown = await $.ui.ask(t.s2, { header: t.shows.slice(0, 12), multiSelect: true, options: t.s2o })
   const picked = shown.split(',').map(s => s.trim())
+  const has = (i: number) => picked.includes(t.s2o[i])
   const hidden: Group[] = []
-  if (!picked.includes('Limits (5h / 7d)')) hidden.push('limits')
-  if (!picked.includes('Context + model')) hidden.push('context', 'model')
-  if (!picked.includes('Project + git')) hidden.push('repo')
-  if (!picked.includes('Session time')) hidden.push('duration')
+  if (!has(0)) hidden.push('limits')
+  if (!has(1)) hidden.push('context', 'model')
+  if (!has(2)) hidden.push('repo')
+  if (!has(3)) hidden.push('duration')
   config.hidden = hidden
 
   // Step 3: second currency
-  const cur = await $.ui.ask(
-    'Step 3/4 - Show the cost in a second currency as well? ' +
-      'Dollars always stay. The conversion uses a fixed rate you choose; nothing is fetched from the internet. ' +
-      'Pick one, or type another code (e.g. JPY) under Other.',
-    { header: 'Currency', options: ['USD only', 'EUR', 'GBP', 'CHF'] },
-  )
-  const code = cur.trim().toUpperCase()
-  config.currency = code.startsWith('USD') ? '' : code.replace(/[^A-Z]/g, '').slice(0, 6)
+  const cur = (await $.ui.ask(t.s3, { header: t.currency.slice(0, 12), options: [t.s3usd, 'EUR', 'GBP', 'CHF'] })).trim()
+  const code = cur === t.s3usd ? '' : cur.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6)
+  config.currency = code === 'USD' ? '' : code
   config.rate = null
 
   // Step 4: rate
   if (config.currency) {
-    const typed = await $.ui.ask(
-      `Step 4/4 - Fixed rate: 1 USD = how many ${config.currency}? ` +
-        'Type the number under Other (e.g. 0.92). In full mode the bar shows the rate next to the converted value.',
-      { header: 'Rate', options: ['Skip, USD only', 'I will type it under Other'] },
-    )
+    const typed = await $.ui.ask(t.s4(config.currency), { header: 'Rate', options: t.s4o })
     const rate = parseRate(typed)
     if (rate) config.rate = rate
     else config.currency = ''
@@ -163,18 +176,28 @@ async function runSetup($: EngineInterface): Promise<string> {
 
   await saveConfig($, config)
   try {
-    $.ui.toast('Tokenomics is set up')
+    $.ui.toast(t.done)
   } catch {}
 
-  const visible = ['cost', ...GROUPS.filter(g => !hidden.includes(g))]
+  const visible = ['cost' as const, ...GROUPS.filter(g => !hidden.includes(g))].map(g => t.names[g])
   return [
-    'Tokenomics is set up.',
-    `  Detail:   ${config.detail}`,
-    `  Shows:    ${visible.join(', ')}`,
-    `  Currency: ${config.currency && config.rate ? `USD + ${config.currency} (1 USD = ${config.rate} ${config.currency})` : 'USD only'}`,
+    t.done,
+    `  ${t.detail}: ${config.detail}`,
+    `  ${t.shows}: ${visible.join(', ')}`,
+    `  ${t.currency}: ${config.currency && config.rate ? `USD + ${config.currency} (1 USD = ${config.rate} ${config.currency})` : t.usdOnly}`,
     '',
-    'Change it any time with /tokenomics setup. /tokenomics explain explains the cost figure.',
-  ].join('\n')
+    t.outro,
+  ].join('
+')
+}
+
+async function setupCommand($: EngineInterface) {
+  try {
+    return { text: await runSetup($), isTextDisplayOnly: true as const }
+  } catch {
+    const lang = byCode((await read($, configAtom)).lang)
+    return { text: lang.t.cancelled, isTextDisplayOnly: true as const }
+  }
 }
 
 export const register: Register = on => {
@@ -182,13 +205,19 @@ export const register: Register = on => {
     try {
       await $.command.register({
         name: 'tokenomics',
-        description: 'Tokenomics bar: "setup" to configure, "explain" for the cost figure, no argument cycles the detail level',
+        description: 'Tokenomics bar: "explain" for the cost figure, "compact/normal/full" to switch, no argument cycles the level',
+      })
+    } catch {}
+    try {
+      await $.command.register({
+        name: 'tokenomics-setup',
+        description: 'Set up the Tokenomics bar step by step (language, detail level, segments, currency)',
       })
     } catch {}
     const config = await loadConfig($)
     if (!config.isSetUp) {
       try {
-        $.ui.toast('Tokenomics: type /tokenomics setup to choose what the bar shows')
+        $.ui.toast('Tokenomics: type /tokenomics-setup to choose what the bar shows')
       } catch {}
     }
     void refreshRepo($)
@@ -198,13 +227,7 @@ export const register: Register = on => {
   on('command.run', { command: 'tokenomics' }, async ($, e) => {
     const arg = e.args.trim().toLowerCase()
     if (arg === 'explain' || arg === 'help') return { text: EXPLAIN, isTextDisplayOnly: true }
-    if (arg === 'setup') {
-      try {
-        return { text: await runSetup($), isTextDisplayOnly: true }
-      } catch {
-        return { text: 'Tokenomics setup cancelled. Nothing was changed.', isTextDisplayOnly: true }
-      }
-    }
+    if (arg === 'setup') return setupCommand($)
     const current = await read($, configAtom)
     if (arg === 'reset') {
       await saveConfig($, { ...DEFAULTS, isSetUp: true })
@@ -216,6 +239,8 @@ export const register: Register = on => {
     await saveConfig($, { ...current, detail: nextLevel })
     return { text: `Tokenomics: ${nextLevel}`, isTextDisplayOnly: true }
   })
+
+  on('command.run', { command: 'tokenomics-setup' }, async $ => setupCommand($))
 
   on('session.measure', async ($, e, next) => {
     await update($, tick, n => n + 1)
