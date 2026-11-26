@@ -1,0 +1,27 @@
+{
+  "name": "session-bar",
+  "version": "0.1.0",
+  "description": "A calm session bar above the prompt: API cost (or API value on a subscription), 5h/7d limits, context, model, git and duration.",
+  "license": "MIT",
+  "userConfig": {
+    "detail": {
+      "type": "string",
+      "title": "Detail level",
+      "description": "compact, normal or full",
+      "default": "normal",
+      "options": ["compact", "normal", "full"]
+    },
+    "currency": {
+      "type": "string",
+      "title": "Second currency code (optional)",
+      "description": "e.g. EUR. Leave empty to show USD only.",
+      "default": ""
+    },
+    "rate": {
+      "type": "string",
+      "title": "Fixed rate: 1 USD = ? second currency",
+      "description": "e.g. 0.92. Shown next to the converted value. No live rates are fetched.",
+      "default": ""
+    }
+  }
+}

@@ -1,0 +1,150 @@
+// Pure formatting helpers: no engine access, easy to test.
+
+export type Level = 'ok' | 'warn' | 'alert'
+
+export type Limit = { kind: string; percentUsed: number; resetsAt?: string }
+
+export type Segment = {
+  key: string
+  text: string
+  level: Level
+  hint?: string
+}
+
+export type Input = {
+  now: number
+  startedAt?: number
+  costUsd?: number
+  hasUnknownPrice?: boolean
+  rateLimits: readonly Limit[]
+  contextPercent?: number
+  model?: string
+  project?: string
+  branch?: string | null
+  dirty?: boolean
+  added?: number
+  removed?: number
+  detail: 'compact' | 'normal' | 'full'
+  currency?: string
+  rate?: number
+}
+
+/** "1h59m", "3d11h", "42m", "<1m". */
+export function duration(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return ''
+  const min = Math.floor(ms / 60000)
+  if (min < 1) return '<1m'
+  const d = Math.floor(min / 1440)
+  const h = Math.floor((min % 1440) / 60)
+  const m = min % 60
+  if (d > 0) return `${d}d${h}h`
+  if (h > 0) return `${h}h${String(m).padStart(2, '0')}m`
+  return `${m}m`
+}
+
+export function money(usd: number): string {
+  return `$${usd.toFixed(2)}`
+}
+
+export function limitLevel(p: number): Level {
+  return p >= 80 ? 'alert' : p >= 60 ? 'warn' : 'ok'
+}
+
+export function contextLevel(p: number): Level {
+  return p >= 80 ? 'alert' : 'ok'
+}
+
+/** Symbol added to the text so a warning never relies on colour alone. */
+export function mark(level: Level): string {
+  return level === 'alert' ? '▲ ' : level === 'warn' ? '△ ' : ''
+}
+
+/** Basename of a path, Windows or POSIX. */
+export function baseName(path: string): string {
+  const parts = path.split(/[\\/]+/).filter(Boolean)
+  return parts[parts.length - 1] ?? path
+}
+
+/** "claude-opus-5-5" -> "Opus 5.5"; anything else passes through. */
+export function modelName(id: string): string {
+  const m = /claude-(opus|sonnet|haiku|fable)-(\d+)(?:-(\d+))?/i.exec(id)
+  if (!m) return id
+  const fam = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase()
+  return m[3] ? `${fam} ${m[2]}.${m[3]}` : `${fam} ${m[2]}`
+}
+
+const LIMIT_LABEL: Record<string, string> = { five_hour: '5h', seven_day: '7d' }
+
+export function segments(i: Input): Segment[] {
+  const out: Segment[] = []
+  const subscription = i.rateLimits.some(l => l.kind === 'five_hour' || l.kind === 'seven_day')
+  const full = i.detail === 'full'
+  const compact = i.detail === 'compact'
+
+  if (typeof i.costUsd === 'number' && Number.isFinite(i.costUsd)) {
+    let value = money(i.costUsd)
+    if (i.currency && i.rate && i.rate > 0) {
+      value += ` (≈ ${(i.costUsd * i.rate).toFixed(2)} ${i.currency}${full ? ` @ ${i.rate}` : ''})`
+    }
+    if (i.hasUnknownPrice) value += '*'
+    const label = subscription
+      ? compact ? 'API value' : 'API value this session'
+      : compact ? 'API cost' : 'API cost this session'
+    const note = subscription && !compact ? ' · covered by subscription' : ''
+    const hint = subscription
+      ? 'Estimate at API list prices for this session only. On a subscription this is not billed: your plan price is not subtracted, so it is not a "saving".'
+      : 'Client-side estimate at API list prices for this session. Your invoice is the final authority.'
+    out.push({ key: 'cost', text: `${label}: ${value}${note}`, level: 'ok', hint })
+  }
+
+  for (const l of i.rateLimits) {
+    const label = LIMIT_LABEL[l.kind]
+    if (!label || !Number.isFinite(l.percentUsed)) continue
+    const level = limitLevel(l.percentUsed)
+    let text = `${mark(level)}${label} limit ${Math.round(l.percentUsed)}%`
+    if (l.resetsAt && !compact) {
+      const left = Date.parse(l.resetsAt) - i.now
+      const d = duration(left)
+      if (d) text += ` · resets in ${d}`
+    }
+    out.push({ key: `limit-${l.kind}`, text, level })
+  }
+
+  if (typeof i.contextPercent === 'number' && Number.isFinite(i.contextPercent)) {
+    const level = contextLevel(i.contextPercent)
+    out.push({ key: 'context', text: `${mark(level)}context ${Math.round(i.contextPercent)}%`, level })
+  }
+
+  if (compact) return out
+
+  if (i.model) out.push({ key: 'model', text: modelName(i.model), level: 'ok' })
+
+  if (i.project) {
+    let text = i.project
+    if (i.branch) text += ` · ${i.branch}`
+    if (i.dirty) text += ' ✗'
+    out.push({ key: 'repo', text, level: 'ok', hint: i.dirty ? 'Uncommitted changes' : undefined })
+  }
+
+  if (full && typeof i.added === 'number' && typeof i.removed === 'number' && (i.added || i.removed)) {
+    out.push({
+      key: 'lines',
+      text: `+${i.added} / −${i.removed} lines`,
+      level: 'ok',
+      hint: 'Uncommitted lines in the working copy (git diff against HEAD)',
+    })
+  }
+
+  if (typeof i.startedAt === 'number') {
+    const d = duration(i.now - i.startedAt)
+    if (d) out.push({ key: 'duration', text: d, level: 'ok' })
+  }
+
+  return out
+}
+
+export function parseRate(s: unknown): number | undefined {
+  if (typeof s !== 'string' || !s.trim()) return undefined
+  const n = Number(s.trim().replace(',', '.'))
+  return Number.isFinite(n) && n > 0 ? n : undefined
+}
