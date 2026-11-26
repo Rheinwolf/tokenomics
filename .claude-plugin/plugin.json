@@ -1,6 +1,6 @@
 {
   "name": "tokenomics-bar",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Tokenomics: token economics at a glance. A calm bar above the Claude Code prompt with API cost (or API value on a subscription), 5h/7d limits, context, model, git and session time.",
   "author": { "name": "Rheinwolf" },
   "license": "MIT"
