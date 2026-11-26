@@ -5,7 +5,7 @@ import { baseName, parseRate, segments } from './format.ts'
 import type { Segment } from './format.ts'
 import { byCode, detectLanguage, ENGLISH, parseLanguage } from './lang.ts'
 import type { Lang } from './lang.ts'
-import { explainText } from './explain.ts'
+import { explainText, VERSION } from './explain.ts'
 
 type Detail = 'compact' | 'normal' | 'full'
 type Group = 'limits' | 'context' | 'model' | 'repo' | 'duration'
@@ -296,21 +296,22 @@ export const register: Register = on => {
       })
       if (segs.length === 0) return next(e)
 
+      // Order: "Tokenomics <version>", session time, then everything else.
+      const duration = segs.filter(s => s.key === 'duration')
+      const ordered: Segment[] = [
+        { key: 'brand', text: `Tokenomics ${VERSION}`, level: 'ok' },
+        ...duration,
+        ...segs.filter(s => s.key !== 'duration'),
+      ]
+
       const { Box, Text } = $.ui.resolve(e)
       const color = (l: string) => (l === 'alert' ? 'error' : l === 'warn' ? 'warning' : l === 'good' ? 'success' : undefined)
-      const row = h(
-        Box,
-        { flexDirection: 'row', flexWrap: 'wrap' },
-        ...segs.map((s, i) =>
-          h(Text, { key: s.key, color: color(s.level), dimColor: s.level === 'ok' }, (i > 0 ? '  ·  ' : '') + s.text),
-        ),
-      )
-      if (config.detail !== 'full') return row
       return h(
         Box,
-        { flexDirection: 'column' },
-        row,
-        h(Text, { dimColor: true }, 'Cost is an estimate at API list prices for this session only. /tokenomics-explain'),
+        { flexDirection: 'row', flexWrap: 'wrap' },
+        ...ordered.map((s, i) =>
+          h(Text, { key: s.key, color: color(s.level), dimColor: s.level === 'ok' }, (i > 0 ? '  ·  ' : '') + s.text),
+        ),
       )
     } catch (err) {
       const { Text } = $.ui.resolve(e)

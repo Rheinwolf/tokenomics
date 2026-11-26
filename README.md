@@ -1,11 +1,11 @@
 # Tokenomics
 
-**Version 0.4.0** · MIT license · [Changelog](CHANGELOG.md)
+**Version 0.4.1** · MIT license · [Changelog](CHANGELOG.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗  ·  1h30m
+Tokenomics 0.4.1  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -89,7 +89,7 @@ A short guided setup opens in Claude's own question dialog and asks, one step at
 1. **Detail level**
    - *Compact*: cost, limits and context only, no reset times
    - *Normal* (default): adds reset times, model, project + git branch and session time
-   - *Full*: adds uncommitted lines (+/-) and a footnote explaining the cost figure
+   - *Full*: adds uncommitted lines (+/-)
 2. **Segments**: tick what you want to see (limits, context + model, project + git, session time). The cost figure always shows.
 3. **Second currency** (optional): e.g. EUR, GBP, CHF or any code you type
 4. **Fixed rate** for that currency (e.g. `0.92`). In full mode the rate is shown next to the converted value. No live rates are fetched.

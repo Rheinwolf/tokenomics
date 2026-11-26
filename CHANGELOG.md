@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+- The bar now starts with "Tokenomics <version>", followed by the session time
+- Removed the extra cost footnote in full mode (the same text is in `/tokenomics-explain`)
+
 ## 0.4.0
 - Traffic-light colours for limits and context: up to 50 % green, up to 75 % yellow (△), above red (▲)
 - `/tokenomics-explain` in all eight setup languages

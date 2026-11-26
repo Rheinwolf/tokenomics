@@ -1,6 +1,6 @@
 // The /tokenomics-explain text in every setup language. The command list stays the same in all of them.
 
-export const VERSION = '0.4.0'
+export const VERSION = '0.4.1'
 
 const COMMANDS = [
   '  /tokenomics-setup     step-by-step setup',

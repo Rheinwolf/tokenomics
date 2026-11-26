@@ -32,7 +32,7 @@ const EN: Strings = {
   s1:
     'Step 1/4 - How much should the bar show? Compact: cost, limits and context only, no reset times. ' +
     'Normal: adds reset times, model, project + git branch and session time. ' +
-    'Full: adds uncommitted lines (+/-) and a footnote explaining the cost figure.',
+    'Full: adds uncommitted lines (+/-).',
   s1o: ['Normal (recommended)', 'Compact', 'Full'],
   s2:
     'Step 2/4 - Which extras should be visible? The cost figure always shows. ' +
@@ -62,7 +62,7 @@ const DE: Strings = {
   s1:
     'Schritt 1/4 - Wie viel soll die Leiste zeigen? Compact: nur Kosten, Kontingente und Kontext, ohne Reset-Zeiten. ' +
     'Normal: zusätzlich Reset-Zeiten, Modell, Projekt + Git-Zweig und Sitzungsdauer. ' +
-    'Full: zusätzlich ungespeicherte Zeilen (+/-) und eine Fußnote zur Kosten-Anzeige.',
+    'Full: zusätzlich ungespeicherte Zeilen (+/-).',
   s1o: ['Normal (empfohlen)', 'Compact', 'Full'],
   s2:
     'Schritt 2/4 - Welche Extras sollen sichtbar sein? Die Kosten stehen immer drin. ' +
@@ -92,7 +92,7 @@ const FR: Strings = {
   s1:
     'Étape 1/4 - Que doit afficher la barre ? Compact : coût, limites et contexte, sans heures de réinitialisation. ' +
     'Normal : ajoute les réinitialisations, le modèle, le projet + branche git et la durée de session. ' +
-    'Full : ajoute les lignes non commitées (+/-) et une note sur le coût.',
+    'Full : ajoute les lignes non commitées (+/-).',
   s1o: ['Normal (recommandé)', 'Compact', 'Full'],
   s2:
     'Étape 2/4 - Quels éléments afficher ? Le coût est toujours affiché. ' +
@@ -122,7 +122,7 @@ const ES: Strings = {
   s1:
     'Paso 1/4 - ¿Cuánto debe mostrar la barra? Compact: solo coste, límites y contexto, sin horas de reinicio. ' +
     'Normal: añade reinicios, modelo, proyecto + rama git y duración de la sesión. ' +
-    'Full: añade líneas sin commit (+/-) y una nota sobre el coste.',
+    'Full: añade líneas sin commit (+/-).',
   s1o: ['Normal (recomendado)', 'Compact', 'Full'],
   s2:
     'Paso 2/4 - ¿Qué extras deben verse? El coste siempre se muestra. ' +
@@ -152,7 +152,7 @@ const IT: Strings = {
   s1:
     'Passo 1/4 - Quanto deve mostrare la barra? Compact: solo costo, limiti e contesto, senza orari di reset. ' +
     'Normal: aggiunge reset, modello, progetto + branch git e durata della sessione. ' +
-    'Full: aggiunge righe non committate (+/-) e una nota sul costo.',
+    'Full: aggiunge righe non committate (+/-).',
   s1o: ['Normal (consigliato)', 'Compact', 'Full'],
   s2:
     'Passo 2/4 - Quali extra mostrare? Il costo è sempre visibile. ' +
@@ -182,7 +182,7 @@ const PL: Strings = {
   s1:
     'Krok 1/4 - Ile ma pokazywać pasek? Compact: tylko koszt, limity i kontekst, bez czasu resetu. ' +
     'Normal: dodaje resety, model, projekt + gałąź git i czas sesji. ' +
-    'Full: dodaje niezatwierdzone linie (+/-) i przypis o koszcie.',
+    'Full: dodaje niezatwierdzone linie (+/-).',
   s1o: ['Normal (zalecane)', 'Compact', 'Full'],
   s2:
     'Krok 2/4 - Które dodatki mają być widoczne? Koszt jest zawsze widoczny. ' +
@@ -212,7 +212,7 @@ const NL: Strings = {
   s1:
     'Stap 1/4 - Hoeveel moet de balk tonen? Compact: alleen kosten, limieten en context, zonder resettijden. ' +
     'Normal: voegt resettijden, model, project + git-branch en sessieduur toe. ' +
-    'Full: voegt niet-gecommitte regels (+/-) en een voetnoot over de kosten toe.',
+    'Full: voegt niet-gecommitte regels (+/-) toe.',
   s1o: ['Normal (aanbevolen)', 'Compact', 'Full'],
   s2:
     'Stap 2/4 - Welke extra’s moeten zichtbaar zijn? De kosten staan er altijd. ' +
@@ -242,7 +242,7 @@ const PT: Strings = {
   s1:
     'Passo 1/4 - Quanto a barra deve mostrar? Compact: só custo, limites e contexto, sem horários de reinício. ' +
     'Normal: adiciona reinícios, modelo, projeto + branch git e duração da sessão. ' +
-    'Full: adiciona linhas sem commit (+/-) e uma nota sobre o custo.',
+    'Full: adiciona linhas sem commit (+/-).',
   s1o: ['Normal (recomendado)', 'Compact', 'Full'],
   s2:
     'Passo 2/4 - Quais extras devem aparecer? O custo aparece sempre. ' +
