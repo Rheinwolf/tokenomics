@@ -45,7 +45,7 @@ const EXPLAIN = [
   '  /tokenomics           cycle compact > normal > full',
   '  /tokenomics full      jump to a level (compact, normal, full)',
   '  /tokenomics-explain   this text',
-  '  /tokenomics reset     back to defaults',
+  '  /tokenomics-reset     back to defaults',
 ].join('\n')
 
 function groupOf(key: string): Group | null {
@@ -199,6 +199,16 @@ async function setupCommand($: EngineInterface) {
   }
 }
 
+/** Back to the defaults; the chosen setup language is kept. */
+async function resetCommand($: EngineInterface) {
+  const current = await read($, configAtom)
+  await saveConfig($, { ...DEFAULTS, isSetUp: true, lang: current.lang })
+  return {
+    text: 'Tokenomics: back to defaults (normal, everything visible, USD only). Run /tokenomics-setup to choose again.',
+    isTextDisplayOnly: true as const,
+  }
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     try {
@@ -219,6 +229,12 @@ export const register: Register = on => {
         description: 'Explain the Tokenomics cost figure (API cost vs. API value on a subscription)',
       })
     } catch {}
+    try {
+      await $.command.register({
+        name: 'tokenomics-reset',
+        description: 'Reset the Tokenomics bar to its defaults (normal, everything visible, USD only)',
+      })
+    } catch {}
     const config = await loadConfig($)
     if (!config.isSetUp) {
       try {
@@ -234,10 +250,7 @@ export const register: Register = on => {
     if (arg === 'explain' || arg === 'help') return { text: EXPLAIN, isTextDisplayOnly: true }
     if (arg === 'setup') return setupCommand($)
     const current = await read($, configAtom)
-    if (arg === 'reset') {
-      await saveConfig($, { ...DEFAULTS, isSetUp: true })
-      return { text: 'Tokenomics: back to defaults.', isTextDisplayOnly: true }
-    }
+    if (arg === 'reset') return resetCommand($)
     const nextLevel: Detail = ORDER.includes(arg as Detail)
       ? (arg as Detail)
       : ORDER[(ORDER.indexOf(current.detail) + 1) % ORDER.length]
@@ -248,6 +261,8 @@ export const register: Register = on => {
   on('command.run', { command: 'tokenomics-setup' }, async ($, e) => setupCommand($))
 
   on('command.run', { command: 'tokenomics-explain' }, async ($, e) => ({ text: EXPLAIN, isTextDisplayOnly: true as const }))
+
+  on('command.run', { command: 'tokenomics-reset' }, async ($, e) => resetCommand($))
 
   on('session.measure', async ($, e, next) => {
     await update($, tick, n => n + 1)

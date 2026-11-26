@@ -99,7 +99,7 @@ Your choices are saved and apply to every session. Until you run the setup, the 
 | `/tokenomics` | cycle compact → normal → full |
 | `/tokenomics compact` · `normal` · `full` | jump to a level |
 | `/tokenomics-explain` | explain the cost figure |
-| `/tokenomics reset` | back to defaults |
+| `/tokenomics-reset` | back to defaults (keeps your setup language) |
 
 ## Privacy
 
