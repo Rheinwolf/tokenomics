@@ -8,8 +8,6 @@ API value this session: $4.37 · covered by subscription  ·  5h limit 41% · re
 
 <!-- Screenshot: docs/screenshot.png -->
 
-The terminal `statusLine` setting does not appear in the desktop app. Tokenomics is a mod (plugin hooks module) that draws there instead, and it also works in the terminal.
-
 ## What it shows
 
 | Segment | Example | Source |
@@ -72,24 +70,39 @@ claude --plugin-dir /path/to/tokenomics
 
 or add the folder to the `CLAUDE_CODE_PLUGIN_DIRS` environment variable.
 
-## Settings
+## Setup
 
-| Option | Values | Default |
-|---|---|---|
-| `detail` | `compact` · `normal` · `full` | `normal` |
-| `currency` | e.g. `EUR` (empty = USD only) | empty |
-| `rate` | fixed rate, 1 USD = ? (e.g. `0.92`) | empty |
+After installing, type:
 
-The second currency always shows the fixed rate you entered (in full mode next to the value). No live rates are fetched.
+```
+/tokenomics setup
+```
 
-Commands:
-- `/tokenomics` — cycle compact → normal → full
-- `/tokenomics full` — jump to a level
-- `/tokenomics explain` — explain the cost figure
+A short guided setup opens in Claude's own question dialog and asks, one step at a time:
+
+1. **Detail level**
+   - *Compact*: cost, limits and context only, no reset times
+   - *Normal* (default): adds reset times, model, project + git branch and session time
+   - *Full*: adds uncommitted lines (+/-) and a footnote explaining the cost figure
+2. **Segments**: tick what you want to see (limits, context + model, project + git, session time). The cost figure always shows.
+3. **Second currency** (optional): e.g. EUR, GBP, CHF or any code you type
+4. **Fixed rate** for that currency (e.g. `0.92`). In full mode the rate is shown next to the converted value. No live rates are fetched.
+
+Your choices are saved and apply to every session. Until you run the setup, the defaults are used (normal, everything visible, USD only).
+
+### Commands
+
+| Command | What it does |
+|---|---|
+| `/tokenomics setup` | guided setup |
+| `/tokenomics` | cycle compact → normal → full |
+| `/tokenomics compact` · `normal` · `full` | jump to a level |
+| `/tokenomics explain` | explain the cost figure |
+| `/tokenomics reset` | back to defaults |
 
 ## Privacy
 
-Reads local session data only. Sends nothing, loads nothing from the internet, stores nothing outside the session. If a value is missing or a call fails, the segment is hidden and the app is never disturbed.
+Reads local session data only. Sends nothing, loads nothing from the internet, stores nothing but your own setup choices. If a value is missing or a call fails, the segment is hidden and the app is never disturbed.
 
 ## Development
 
