@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.6
+- Community files: Code of Conduct, contributing guide, accessibility statement
+- Issue forms for bug reports and feature requests, a security contact link, and a pull request template
+
 ## 0.4.5
 - Added a security policy (SECURITY.md): supported versions, private reporting through GitHub, what counts as a security issue, security design
 

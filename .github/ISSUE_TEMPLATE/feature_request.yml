@@ -1,0 +1,20 @@
+name: Feature request
+description: An idea for the bar, the setup or the commands
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would it help you?
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I understand Tokenomics sends nothing and runs only read-only git commands, and my idea keeps it that way (or I explain why not).

@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in the bar is wrong, missing or broken
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Security problems please report privately, see SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Tokenomics version
+      description: The bar starts with "Tokenomics x.y.z".
+      placeholder: "x.y.z"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where do you use Claude Code?
+      options:
+        - Desktop app (Code tab)
+        - Terminal
+        - Both
+    validations:
+      required: true
+  - type: dropdown
+    id: billing
+    attributes:
+      label: Billing
+      options:
+        - Subscription (Pro / Max / Team)
+        - API billing
+        - Not sure
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11, macOS 15, Ubuntu 24.04 …"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: A screenshot of the bar helps a lot. Please crop out names and paths you don't want to share.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run /tokenomics-setup and choose …
+        2. …
+  - type: textarea
+    id: notice
+    attributes:
+      label: Grey "tokenomics-bar …" lines in the chat
+      description: If Claude Code printed a grey line naming the mod (e.g. "reload failed" or "hook skipped"), paste it here.
