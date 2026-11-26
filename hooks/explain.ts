@@ -1,10 +1,10 @@
 // The /tokenomics-explain text in every setup language. The command list stays the same in all of them.
 
-export const VERSION = '0.5.0'
+export const VERSION = '0.6.0'
 
 const COMMANDS = [
   '  /tokenomics-setup     step-by-step setup',
-  '  /tokenomics           compact > normal > full',
+  '  /tokenomics           compact <> your selection',
   '  /tokenomics-explain   this text',
   '  /tokenomics-changes   pane with every changed file',
   '  /tokenomics-reset     back to defaults',

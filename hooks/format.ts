@@ -29,6 +29,8 @@ export type Input = {
   rate?: number
   /** Shown instead of "@ rate" in full mode, e.g. "ECB 2026-11-26". */
   rateSource?: string
+  /** false hides "resets in …" behind the limits (default: shown unless compact). */
+  resets?: boolean
 }
 
 /** "1h59m", "3d11h", "42m", "<1m". */
@@ -105,7 +107,7 @@ export function segments(i: Input): Segment[] {
     if (!label || !Number.isFinite(l.percentUsed)) continue
     const level = limitLevel(l.percentUsed)
     let text = `${mark(level)}${label} limit ${Math.round(l.percentUsed)}%`
-    if (l.resetsAt && !compact) {
+    if (l.resetsAt && !compact && i.resets !== false) {
       const left = Date.parse(l.resetsAt) - i.now
       const d = duration(left)
       if (d) text += ` · resets in ${d}`

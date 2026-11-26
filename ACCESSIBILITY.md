@@ -7,7 +7,7 @@ Tokenomics should be readable for everyone, including people with colour vision 
 - **Colour is never the only signal.** Yellow always comes with `△`, red with `▲`, and every value is also written as a number (`context 82%`). The traffic light works with red-green colour blindness.
 - **Text only.** The bar is plain text drawn by Claude Code itself, so it follows your Claude Code theme (light or dark), font size and any zoom you use.
 - **Calm by default.** Only values that can run out get a colour; everything else stays muted. Nothing blinks or moves.
-- **Adjustable amount of information.** `/tokenomics` switches between compact, normal and full, and `/tokenomics-setup` lets you hide whole segments.
+- **Adjustable amount of information.** `/tokenomics-setup` asks about every item one by one, with an explanation, and `/tokenomics` switches to a compact bar and back.
 - **Your language for setup and help.** `/tokenomics-setup` and `/tokenomics-explain` are available in 8 languages; the setup asks first and accepts any spelling of a language name.
 - **Keyboard only.** Everything works through slash commands and Claude Code's own question dialog; no mouse is needed.
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0
+- `/tokenomics-setup` now asks about every item on its own, with an explanation and an example, answered with Yes or No: usage limits, reset times, context, model, project + git, changed lines and session time. Replaces the detail levels and the multi-select step
+- `/tokenomics` is now a quick switch between a compact bar and your own selection (`/tokenomics compact` · `full`)
+- Reset times and changed lines can be switched off separately
+- Git commands run only if project + git or changed lines are shown, or the changes pane is open
+- An earlier "compact" choice carries over; other old detail levels become your full selection
+
 ## 0.5.0
 - New `/tokenomics-changes`: a pane beside the chat listing every file changed since the last commit, with +/− lines per file and new files marked
 - Changed lines (`+/− lines`) now show in normal mode too; full mode additionally shows the exchange rate used

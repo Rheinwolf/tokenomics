@@ -2,12 +2,12 @@
 
 # Tokenomics
 
-**Version 0.5.0** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
+**Version 0.6.0** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.5.0  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.6.0  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -104,7 +104,7 @@ claude --plugin-dir /path/to/tokenomics
 
 ### After installing
 
-- Your setup choices (language, detail level, segments, currency) are saved once and apply in every session and project.
+- Your setup choices (language, which items show, currency) are saved once and apply in every session and project.
 - You can switch Tokenomics off any time in Claude Code's plugin management, also for single projects.
 - Updates arrive through the plugin management. The bar always starts with its version, `Tokenomics x.y.z`.
 
@@ -119,23 +119,28 @@ After installing, type:
 A short guided setup opens in Claude's own question dialog and asks, one step at a time:
 
 0. **Language**: English is always offered, plus the language detected from your recent messages. You can also type any language, in English or in your own language ("German" or "Deutsch"). Setup texts are available in English, Deutsch, Français, Español, Italiano, Polski, Nederlands and Português; other languages fall back to English.
-1. **Detail level**
-   - *Compact*: cost, limits and context only, no reset times
-   - *Normal* (default): adds reset times, model, project + git branch, changed lines (+/-) and session time
-   - *Full*: also shows the exchange rate used
-2. **Segments**: tick what you want to see (limits, context + model, project + git, session time). The cost figure always shows.
-3. **Second currency** (optional): e.g. EUR, GBP, CHF or any code you type
-4. **Rate** for that currency: either a **fixed rate** you type (e.g. `0.92`), or, opt-in, the **daily reference rate of the European Central Bank** (one request per day to ecb.europa.eu, see [Privacy](#privacy)). In full mode the rate or `ECB <date>` is shown next to the converted value.
+1. **One question per item, each with a short explanation**, answered with *Yes* or *No*:
+   - usage limits (5h / 7d)
+   - reset times (`resets in 1h59m`)
+   - context fill
+   - model
+   - project + git branch
+   - changed lines (`+120 / −30 lines`), only asked if project + git is *Yes*
+   - session time
 
-Your choices are saved and apply to every session. Until you run the setup, the defaults are used (normal, everything visible, USD only).
+   The cost figure always shows.
+2. **Second currency** (optional): e.g. EUR, GBP, CHF or any code you type
+3. **Rate** for that currency: either a **fixed rate** you type (e.g. `0.92`), or, opt-in, the **daily reference rate of the European Central Bank** (one request per day to ecb.europa.eu, see [Privacy](#privacy)). The rate or `ECB <date>` is shown next to the converted value.
+
+Your choices are saved and apply to every session. Until you run the setup, everything is visible and only USD is shown.
 
 ### Commands
 
 | Command | What it does |
 |---|---|
 | `/tokenomics-setup` | guided setup (also `/tokenomics setup`) |
-| `/tokenomics` | cycle compact → normal → full |
-| `/tokenomics compact` · `normal` · `full` | jump to a level |
+| `/tokenomics` | quick switch: compact (cost, limits, context) ↔ your own selection |
+| `/tokenomics compact` · `full` | jump to compact or back to your selection |
 | `/tokenomics-explain` | explain the cost figure |
 | `/tokenomics-changes` | open or close the [changes pane](#changes-pane) |
 | `/tokenomics-reset` | back to defaults (keeps your setup language) |
@@ -173,11 +178,11 @@ Tokenomics starts exactly one program: **`git`**, and only these three read-only
 - They run in the project folder of the current session, at session start and after each turn, with a 5-second timeout.
 - They only read. They change nothing, contact no server (no `fetch`, `pull` or `push`) and their output is used only to draw the bar.
 - If git is not installed or the folder is not a git repository, the project segment simply shows the folder name.
-- To avoid them completely, untick **Project + git** in `/tokenomics-setup`.
+- To avoid them completely, answer *No* to **project + git** in `/tokenomics-setup` and keep the changes pane closed.
 
 ### What it stores
 
-Only your setup choices (language, detail level, visible segments, currency and rate, whether the changes pane is open) and, if you opted in, the day's ECB rate for your currency, in Claude Code's local plugin store (`$.store`).
+Only your setup choices (language, which items show, compact switch, currency and rate, whether the changes pane is open) and, if you opted in, the day's ECB rate for your currency, in Claude Code's local plugin store (`$.store`).
 
 ### What each hook does
 

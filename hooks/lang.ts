@@ -2,10 +2,10 @@
 // Pure module, no engine access. Add a language by adding one entry to LANGS.
 
 export type Strings = {
-  s1: string
-  s1o: [string, string, string] // normal, compact, full
-  s2: string
-  s2o: [string, string, string, string] // limits, context+model, project+git, session time
+  /** One yes/no question per bar item, each with a short explanation. */
+  items: Record<Item, string>
+  yes: string
+  no: string
   s3: string
   s3usd: string // first option of step 3
   s4: (cur: string) => string
@@ -19,8 +19,10 @@ export type Strings = {
   usdOnly: string
   outro: string
   cancelled: string
-  names: Record<'cost' | 'limits' | 'context' | 'model' | 'repo' | 'duration', string>
+  names: Record<'cost' | Item, string>
 }
+
+export type Item = 'limits' | 'resets' | 'context' | 'model' | 'repo' | 'lines' | 'duration'
 
 export type Lang = {
   code: string
@@ -31,23 +33,24 @@ export type Lang = {
 }
 
 const EN: Strings = {
-  s1:
-    'Step 1/4 - How much should the bar show? Compact: cost, limits and context only, no reset times. ' +
-    'Normal: adds reset times, model, project + git branch, changed lines (+/-) and session time. ' +
-    'Full: also shows the exchange rate used.',
-  s1o: ['Normal (recommended)', 'Compact', 'Full'],
-  s2:
-    'Step 2/4 - Which extras should be visible? The cost figure always shows. ' +
-    'Limits = 5h/7d usage (subscriptions only). Context = how full the context window is, plus the model. ' +
-    'Project = folder name, git branch and ✗ for uncommitted changes.',
-  s2o: ['Limits (5h / 7d)', 'Context + model', 'Project + git', 'Session time'],
+  items: {
+    limits: 'Show your usage limits? The 5-hour and 7-day limits in percent, in traffic-light colours (green up to 50 %, yellow △ up to 75 %, red ▲ above). Only on a subscription.',
+    resets: 'Show when the limits reset? Adds e.g. "resets in 1h59m" behind each limit.',
+    context: 'Show how full the context window is? E.g. "context 38%", in traffic-light colours. When it is full, Claude Code has to compact the conversation.',
+    model: 'Show the model? E.g. "Opus 5.5".',
+    repo: 'Show the project and git branch? E.g. "my-project · main ✗" (✗ = uncommitted changes). Tokenomics runs three read-only git commands for this, locally; choosing No runs none.',
+    lines: 'Show the changed lines? E.g. "+120 / −30 lines": lines added and removed since the last commit. The full list per file: /tokenomics-changes.',
+    duration: 'Show the session time? E.g. "1h30m" since the session started.',
+  },
+  yes: 'Yes',
+  no: 'No',
   s3:
-    'Step 3/4 - Show the cost in a second currency as well? Dollars always stay. ' +
+    'Show the cost in a second currency as well? Dollars always stay. ' +
     'In the next step you choose the rate: a fixed one you type, or the daily ECB rate (opt-in). ' +
     'Pick one, or type another code (e.g. JPY) under Other.',
   s3usd: 'USD only',
   s4: cur =>
-    `Step 4/4 - Rate for ${cur}: fetch the daily reference rate of the European Central Bank (opt-in: one small internet request per day to ecb.europa.eu, nothing about you is sent), or type a fixed rate under Other (e.g. 0.92).`,
+    `Rate for ${cur}: fetch the daily reference rate of the European Central Bank (opt-in: one small internet request per day to ecb.europa.eu, nothing about you is sent), or type a fixed rate under Other (e.g. 0.92).`,
   s4o: ['Skip, USD only', 'I will type it under Other'],
   s4live: 'Daily ECB rate (internet)',
   ecbDaily: 'daily ECB rate',
@@ -58,27 +61,28 @@ const EN: Strings = {
   usdOnly: 'USD only',
   outro: 'Change it any time with /tokenomics-setup. /tokenomics-explain explains the cost figure.',
   cancelled: 'Tokenomics setup cancelled. Nothing was changed.',
-  names: { cost: 'cost', limits: 'limits', context: 'context', model: 'model', repo: 'project + git', duration: 'session time' },
+  names: { cost: 'cost', limits: 'limits', context: 'context', model: 'model', repo: 'project + git', duration: 'session time', resets: 'reset times', lines: 'changed lines' },
 }
 
 const DE: Strings = {
-  s1:
-    'Schritt 1/4 - Wie viel soll die Leiste zeigen? Compact: nur Kosten, Kontingente und Kontext, ohne Reset-Zeiten. ' +
-    'Normal: zusätzlich Reset-Zeiten, Modell, Projekt + Git-Zweig, geänderte Zeilen (+/-) und Sitzungsdauer. ' +
-    'Full: zeigt außerdem den verwendeten Wechselkurs.',
-  s1o: ['Normal (empfohlen)', 'Compact', 'Full'],
-  s2:
-    'Schritt 2/4 - Welche Extras sollen sichtbar sein? Die Kosten stehen immer drin. ' +
-    'Kontingente = 5h/7d-Verbrauch (nur mit Abo). Kontext = wie voll das Kontextfenster ist, dazu das Modell. ' +
-    'Projekt = Ordnername, Git-Zweig und ✗ bei ungespeicherten Änderungen.',
-  s2o: ['Kontingente (5h / 7d)', 'Kontext + Modell', 'Projekt + Git', 'Sitzungsdauer'],
+  items: {
+    limits: 'Kontingente anzeigen? Das 5-Stunden- und 7-Tage-Kontingent in Prozent, in Ampelfarben (grün bis 50 %, gelb △ bis 75 %, rot ▲ darüber). Nur mit Abo.',
+    resets: 'Anzeigen, wann die Kontingente zurückgesetzt werden? Ergänzt z. B. „resets in 1h59m“ hinter jedem Kontingent.',
+    context: 'Anzeigen, wie voll das Kontextfenster ist? Z. B. „context 38%“, in Ampelfarben. Ist es voll, muss Claude Code das Gespräch zusammenfassen.',
+    model: 'Das Modell anzeigen? Z. B. „Opus 5.5“.',
+    repo: 'Projekt und Git-Zweig anzeigen? Z. B. „mein-projekt · main ✗“ (✗ = ungespeicherte Änderungen). Dafür führt Tokenomics lokal drei nur lesende Git-Befehle aus; bei Nein keinen.',
+    lines: 'Geänderte Zeilen anzeigen? Z. B. „+120 / −30 lines“: hinzugefügte und entfernte Zeilen seit dem letzten Commit. Die Liste pro Datei: /tokenomics-changes.',
+    duration: 'Die Sitzungsdauer anzeigen? Z. B. „1h30m“ seit Beginn der Sitzung.',
+  },
+  yes: 'Ja',
+  no: 'Nein',
   s3:
-    'Schritt 3/4 - Kosten zusätzlich in einer zweiten Währung zeigen? Dollar bleibt immer. ' +
+    'Kosten zusätzlich in einer zweiten Währung zeigen? Dollar bleibt immer. ' +
     'Im nächsten Schritt wählst du den Kurs: einen festen, den du eintippst, oder den täglichen EZB-Kurs (freiwillig). ' +
     'Eine auswählen oder unter Other einen anderen Code eintippen (z. B. JPY).',
   s3usd: 'Nur USD',
   s4: cur =>
-    `Schritt 4/4 - Kurs für ${cur}: täglich den Referenzkurs der Europäischen Zentralbank holen (freiwillig: eine kleine Internet-Anfrage pro Tag an ecb.europa.eu, es wird nichts über dich gesendet), oder unter Other einen festen Kurs eintippen (z. B. 0.92).`,
+    `Kurs für ${cur}: täglich den Referenzkurs der Europäischen Zentralbank holen (freiwillig: eine kleine Internet-Anfrage pro Tag an ecb.europa.eu, es wird nichts über dich gesendet), oder unter Other einen festen Kurs eintippen (z. B. 0.92).`,
   s4o: ['Überspringen, nur USD', 'Ich tippe ihn unter Other ein'],
   s4live: 'Täglicher EZB-Kurs (Internet)',
   ecbDaily: 'täglicher EZB-Kurs',
@@ -89,27 +93,28 @@ const DE: Strings = {
   usdOnly: 'nur USD',
   outro: 'Jederzeit änderbar mit /tokenomics-setup. /tokenomics-explain erklärt die Kosten-Anzeige.',
   cancelled: 'Einrichtung abgebrochen. Nichts wurde geändert.',
-  names: { cost: 'Kosten', limits: 'Kontingente', context: 'Kontext', model: 'Modell', repo: 'Projekt + Git', duration: 'Sitzungsdauer' },
+  names: { cost: 'Kosten', limits: 'Kontingente', context: 'Kontext', model: 'Modell', repo: 'Projekt + Git', duration: 'Sitzungsdauer', resets: 'Reset-Zeiten', lines: 'geänderte Zeilen' },
 }
 
 const FR: Strings = {
-  s1:
-    'Étape 1/4 - Que doit afficher la barre ? Compact : coût, limites et contexte, sans heures de réinitialisation. ' +
-    'Normal : ajoute les réinitialisations, le modèle, le projet + branche git, les lignes modifiées (+/-) et la durée de session. ' +
-    'Full : affiche aussi le taux de change utilisé.',
-  s1o: ['Normal (recommandé)', 'Compact', 'Full'],
-  s2:
-    'Étape 2/4 - Quels éléments afficher ? Le coût est toujours affiché. ' +
-    'Limites = utilisation 5h/7j (abonnement uniquement). Contexte = remplissage de la fenêtre de contexte, plus le modèle. ' +
-    'Projet = nom du dossier, branche git et ✗ si modifications non commitées.',
-  s2o: ['Limites (5h / 7j)', 'Contexte + modèle', 'Projet + git', 'Durée de session'],
+  items: {
+    limits: 'Afficher vos limites d’utilisation ? Les limites sur 5 heures et 7 jours en pourcentage, aux couleurs d’un feu tricolore (vert jusqu’à 50 %, jaune △ jusqu’à 75 %, rouge ▲ au-delà). Uniquement avec un abonnement.',
+    resets: 'Afficher quand les limites se réinitialisent ? Ajoute par ex. « resets in 1h59m » après chaque limite.',
+    context: 'Afficher le remplissage de la fenêtre de contexte ? Par ex. « context 38% », aux couleurs du feu. Quand elle est pleine, Claude Code doit résumer la conversation.',
+    model: 'Afficher le modèle ? Par ex. « Opus 5.5 ».',
+    repo: 'Afficher le projet et la branche git ? Par ex. « mon-projet · main ✗ » (✗ = modifications non commitées). Tokenomics exécute pour cela trois commandes git en lecture seule, localement ; avec Non, aucune.',
+    lines: 'Afficher les lignes modifiées ? Par ex. « +120 / −30 lines » : lignes ajoutées et supprimées depuis le dernier commit. La liste par fichier : /tokenomics-changes.',
+    duration: 'Afficher la durée de la session ? Par ex. « 1h30m » depuis le début.',
+  },
+  yes: 'Oui',
+  no: 'Non',
   s3:
-    'Étape 3/4 - Afficher aussi le coût dans une autre devise ? Le dollar reste toujours. ' +
+    'Afficher aussi le coût dans une autre devise ? Le dollar reste toujours. ' +
     'À l’étape suivante, vous choisissez le taux : un taux fixe que vous tapez, ou le taux BCE quotidien (facultatif). ' +
     'Choisissez-en une ou tapez un autre code (ex. JPY) sous Other.',
   s3usd: 'USD seulement',
   s4: cur =>
-    `Étape 4/4 - Taux pour ${cur} : récupérer chaque jour le taux de référence de la Banque centrale européenne (facultatif : une petite requête Internet par jour vers ecb.europa.eu, rien sur vous n’est envoyé), ou taper un taux fixe sous Other (ex. 0.92).`,
+    `Taux pour ${cur} : récupérer chaque jour le taux de référence de la Banque centrale européenne (facultatif : une petite requête Internet par jour vers ecb.europa.eu, rien sur vous n’est envoyé), ou taper un taux fixe sous Other (ex. 0.92).`,
   s4o: ['Passer, USD seulement', 'Je le tape sous Other'],
   s4live: 'Taux BCE quotidien (Internet)',
   ecbDaily: 'taux BCE quotidien',
@@ -120,27 +125,28 @@ const FR: Strings = {
   usdOnly: 'USD seulement',
   outro: 'Modifiable à tout moment avec /tokenomics-setup. /tokenomics-explain explique le coût.',
   cancelled: 'Configuration annulée. Rien n’a été modifié.',
-  names: { cost: 'coût', limits: 'limites', context: 'contexte', model: 'modèle', repo: 'projet + git', duration: 'durée' },
+  names: { cost: 'coût', limits: 'limites', context: 'contexte', model: 'modèle', repo: 'projet + git', duration: 'durée', resets: 'réinitialisations', lines: 'lignes modifiées' },
 }
 
 const ES: Strings = {
-  s1:
-    'Paso 1/4 - ¿Cuánto debe mostrar la barra? Compact: solo coste, límites y contexto, sin horas de reinicio. ' +
-    'Normal: añade reinicios, modelo, proyecto + rama git, líneas cambiadas (+/-) y duración de la sesión. ' +
-    'Full: muestra también el tipo de cambio usado.',
-  s1o: ['Normal (recomendado)', 'Compact', 'Full'],
-  s2:
-    'Paso 2/4 - ¿Qué extras deben verse? El coste siempre se muestra. ' +
-    'Límites = uso de 5h/7d (solo con suscripción). Contexto = lo lleno que está el contexto, más el modelo. ' +
-    'Proyecto = nombre de la carpeta, rama git y ✗ si hay cambios sin commit.',
-  s2o: ['Límites (5h / 7d)', 'Contexto + modelo', 'Proyecto + git', 'Duración'],
+  items: {
+    limits: '¿Mostrar tus límites de uso? Los límites de 5 horas y 7 días en porcentaje, con colores de semáforo (verde hasta 50 %, amarillo △ hasta 75 %, rojo ▲ por encima). Solo con suscripción.',
+    resets: '¿Mostrar cuándo se reinician los límites? Añade p. ej. «resets in 1h59m» tras cada límite.',
+    context: '¿Mostrar lo lleno que está el contexto? P. ej. «context 38%», con colores de semáforo. Cuando se llena, Claude Code tiene que resumir la conversación.',
+    model: '¿Mostrar el modelo? P. ej. «Opus 5.5».',
+    repo: '¿Mostrar el proyecto y la rama git? P. ej. «mi-proyecto · main ✗» (✗ = cambios sin commit). Para ello Tokenomics ejecuta localmente tres comandos git de solo lectura; con No, ninguno.',
+    lines: '¿Mostrar las líneas cambiadas? P. ej. «+120 / −30 lines»: líneas añadidas y eliminadas desde el último commit. La lista por archivo: /tokenomics-changes.',
+    duration: '¿Mostrar la duración de la sesión? P. ej. «1h30m» desde el inicio.',
+  },
+  yes: 'Sí',
+  no: 'No',
   s3:
-    'Paso 3/4 - ¿Mostrar también el coste en otra moneda? El dólar siempre se queda. ' +
+    '¿Mostrar también el coste en otra moneda? El dólar siempre se queda. ' +
     'En el siguiente paso eliges el tipo: uno fijo que escribes o el tipo diario del BCE (opcional). ' +
     'Elige una o escribe otro código (p. ej. JPY) en Other.',
   s3usd: 'Solo USD',
   s4: cur =>
-    `Paso 4/4 - Tipo para ${cur}: obtener cada día el tipo de referencia del Banco Central Europeo (opcional: una pequeña petición a Internet al día a ecb.europa.eu, no se envía nada sobre ti), o escribir un tipo fijo en Other (p. ej. 0.92).`,
+    `Tipo para ${cur}: obtener cada día el tipo de referencia del Banco Central Europeo (opcional: una pequeña petición a Internet al día a ecb.europa.eu, no se envía nada sobre ti), o escribir un tipo fijo en Other (p. ej. 0.92).`,
   s4o: ['Omitir, solo USD', 'Lo escribo en Other'],
   s4live: 'Tipo diario del BCE (Internet)',
   ecbDaily: 'tipo diario del BCE',
@@ -151,27 +157,28 @@ const ES: Strings = {
   usdOnly: 'solo USD',
   outro: 'Cámbialo cuando quieras con /tokenomics-setup. /tokenomics-explain explica el coste.',
   cancelled: 'Configuración cancelada. No se cambió nada.',
-  names: { cost: 'coste', limits: 'límites', context: 'contexto', model: 'modelo', repo: 'proyecto + git', duration: 'duración' },
+  names: { cost: 'coste', limits: 'límites', context: 'contexto', model: 'modelo', repo: 'proyecto + git', duration: 'duración', resets: 'reinicios', lines: 'líneas cambiadas' },
 }
 
 const IT: Strings = {
-  s1:
-    'Passo 1/4 - Quanto deve mostrare la barra? Compact: solo costo, limiti e contesto, senza orari di reset. ' +
-    'Normal: aggiunge reset, modello, progetto + branch git, righe modificate (+/-) e durata della sessione. ' +
-    'Full: mostra anche il cambio usato.',
-  s1o: ['Normal (consigliato)', 'Compact', 'Full'],
-  s2:
-    'Passo 2/4 - Quali extra mostrare? Il costo è sempre visibile. ' +
-    'Limiti = utilizzo 5h/7g (solo abbonamento). Contesto = quanto è pieno il contesto, più il modello. ' +
-    'Progetto = nome cartella, branch git e ✗ per modifiche non committate.',
-  s2o: ['Limiti (5h / 7g)', 'Contesto + modello', 'Progetto + git', 'Durata sessione'],
+  items: {
+    limits: 'Mostrare i limiti di utilizzo? I limiti di 5 ore e 7 giorni in percentuale, con i colori del semaforo (verde fino al 50 %, giallo △ fino al 75 %, rosso ▲ oltre). Solo con abbonamento.',
+    resets: 'Mostrare quando i limiti si azzerano? Aggiunge ad es. «resets in 1h59m» dopo ogni limite.',
+    context: 'Mostrare quanto è pieno il contesto? Ad es. «context 38%», con i colori del semaforo. Quando è pieno, Claude Code deve riassumere la conversazione.',
+    model: 'Mostrare il modello? Ad es. «Opus 5.5».',
+    repo: 'Mostrare il progetto e il branch git? Ad es. «mio-progetto · main ✗» (✗ = modifiche non committate). Per questo Tokenomics esegue localmente tre comandi git di sola lettura; con No, nessuno.',
+    lines: 'Mostrare le righe modificate? Ad es. «+120 / −30 lines»: righe aggiunte e rimosse dall’ultimo commit. L’elenco per file: /tokenomics-changes.',
+    duration: 'Mostrare la durata della sessione? Ad es. «1h30m» dall’inizio.',
+  },
+  yes: 'Sì',
+  no: 'No',
   s3:
-    'Passo 3/4 - Mostrare il costo anche in un’altra valuta? Il dollaro resta sempre. ' +
+    'Mostrare il costo anche in un’altra valuta? Il dollaro resta sempre. ' +
     'Nel passo successivo scegli il cambio: uno fisso che scrivi tu, o il cambio BCE giornaliero (facoltativo). ' +
     'Scegline una o scrivi un altro codice (es. JPY) in Other.',
   s3usd: 'Solo USD',
   s4: cur =>
-    `Passo 4/4 - Cambio per ${cur}: scaricare ogni giorno il tasso di riferimento della Banca centrale europea (facoltativo: una piccola richiesta Internet al giorno a ecb.europa.eu, nulla su di te viene inviato), o scrivere un cambio fisso in Other (es. 0.92).`,
+    `Cambio per ${cur}: scaricare ogni giorno il tasso di riferimento della Banca centrale europea (facoltativo: una piccola richiesta Internet al giorno a ecb.europa.eu, nulla su di te viene inviato), o scrivere un cambio fisso in Other (es. 0.92).`,
   s4o: ['Salta, solo USD', 'Lo scrivo in Other'],
   s4live: 'Cambio BCE giornaliero (Internet)',
   ecbDaily: 'cambio BCE giornaliero',
@@ -182,27 +189,28 @@ const IT: Strings = {
   usdOnly: 'solo USD',
   outro: 'Modificabile in ogni momento con /tokenomics-setup. /tokenomics-explain spiega il costo.',
   cancelled: 'Configurazione annullata. Nulla è stato modificato.',
-  names: { cost: 'costo', limits: 'limiti', context: 'contesto', model: 'modello', repo: 'progetto + git', duration: 'durata' },
+  names: { cost: 'costo', limits: 'limiti', context: 'contesto', model: 'modello', repo: 'progetto + git', duration: 'durata', resets: 'azzeramenti', lines: 'righe modificate' },
 }
 
 const PL: Strings = {
-  s1:
-    'Krok 1/4 - Ile ma pokazywać pasek? Compact: tylko koszt, limity i kontekst, bez czasu resetu. ' +
-    'Normal: dodaje resety, model, projekt + gałąź git, zmienione linie (+/-) i czas sesji. ' +
-    'Full: pokazuje też użyty kurs wymiany.',
-  s1o: ['Normal (zalecane)', 'Compact', 'Full'],
-  s2:
-    'Krok 2/4 - Które dodatki mają być widoczne? Koszt jest zawsze widoczny. ' +
-    'Limity = zużycie 5h/7d (tylko z subskrypcją). Kontekst = zapełnienie okna kontekstu, plus model. ' +
-    'Projekt = nazwa folderu, gałąź git i ✗ przy niezatwierdzonych zmianach.',
-  s2o: ['Limity (5h / 7d)', 'Kontekst + model', 'Projekt + git', 'Czas sesji'],
+  items: {
+    limits: 'Pokazywać limity użycia? Limity 5-godzinny i 7-dniowy w procentach, w kolorach sygnalizacji (zielony do 50 %, żółty △ do 75 %, czerwony ▲ powyżej). Tylko z subskrypcją.',
+    resets: 'Pokazywać, kiedy limity się resetują? Dodaje np. „resets in 1h59m” za każdym limitem.',
+    context: 'Pokazywać zapełnienie okna kontekstu? Np. „context 38%”, w kolorach sygnalizacji. Gdy jest pełne, Claude Code musi streścić rozmowę.',
+    model: 'Pokazywać model? Np. „Opus 5.5”.',
+    repo: 'Pokazywać projekt i gałąź git? Np. „moj-projekt · main ✗” (✗ = niezatwierdzone zmiany). Tokenomics uruchamia w tym celu lokalnie trzy polecenia git tylko do odczytu; przy Nie żadnego.',
+    lines: 'Pokazywać zmienione linie? Np. „+120 / −30 lines”: linie dodane i usunięte od ostatniego commita. Lista dla każdego pliku: /tokenomics-changes.',
+    duration: 'Pokazywać czas sesji? Np. „1h30m” od jej rozpoczęcia.',
+  },
+  yes: 'Tak',
+  no: 'Nie',
   s3:
-    'Krok 3/4 - Pokazać koszt także w drugiej walucie? Dolar zostaje zawsze. ' +
+    'Pokazać koszt także w drugiej walucie? Dolar zostaje zawsze. ' +
     'W następnym kroku wybierasz kurs: stały, który wpisujesz, albo dzienny kurs EBC (opcjonalnie). ' +
     'Wybierz jedną lub wpisz inny kod (np. JPY) w Other.',
   s3usd: 'Tylko USD',
   s4: cur =>
-    `Krok 4/4 - Kurs dla ${cur}: codziennie pobierać kurs referencyjny Europejskiego Banku Centralnego (opcjonalnie: jedno małe zapytanie dziennie do ecb.europa.eu, nic o Tobie nie jest wysyłane) albo wpisać stały kurs w Other (np. 4.05).`,
+    `Kurs dla ${cur}: codziennie pobierać kurs referencyjny Europejskiego Banku Centralnego (opcjonalnie: jedno małe zapytanie dziennie do ecb.europa.eu, nic o Tobie nie jest wysyłane) albo wpisać stały kurs w Other (np. 4.05).`,
   s4o: ['Pomiń, tylko USD', 'Wpiszę go w Other'],
   s4live: 'Dzienny kurs EBC (internet)',
   ecbDaily: 'dzienny kurs EBC',
@@ -213,27 +221,28 @@ const PL: Strings = {
   usdOnly: 'tylko USD',
   outro: 'Zmień w każdej chwili przez /tokenomics-setup. /tokenomics-explain wyjaśnia koszt.',
   cancelled: 'Konfiguracja przerwana. Nic nie zostało zmienione.',
-  names: { cost: 'koszt', limits: 'limity', context: 'kontekst', model: 'model', repo: 'projekt + git', duration: 'czas sesji' },
+  names: { cost: 'koszt', limits: 'limity', context: 'kontekst', model: 'model', repo: 'projekt + git', duration: 'czas sesji', resets: 'czas resetu', lines: 'zmienione linie' },
 }
 
 const NL: Strings = {
-  s1:
-    'Stap 1/4 - Hoeveel moet de balk tonen? Compact: alleen kosten, limieten en context, zonder resettijden. ' +
-    'Normal: voegt resettijden, model, project + git-branch, gewijzigde regels (+/-) en sessieduur toe. ' +
-    'Full: toont ook de gebruikte wisselkoers.',
-  s1o: ['Normal (aanbevolen)', 'Compact', 'Full'],
-  s2:
-    'Stap 2/4 - Welke extra’s moeten zichtbaar zijn? De kosten staan er altijd. ' +
-    'Limieten = 5u/7d-gebruik (alleen abonnement). Context = hoe vol het contextvenster is, plus het model. ' +
-    'Project = mapnaam, git-branch en ✗ bij niet-gecommitte wijzigingen.',
-  s2o: ['Limieten (5u / 7d)', 'Context + model', 'Project + git', 'Sessieduur'],
+  items: {
+    limits: 'Je gebruikslimieten tonen? De limieten van 5 uur en 7 dagen in procenten, in stoplichtkleuren (groen tot 50 %, geel △ tot 75 %, rood ▲ daarboven). Alleen met een abonnement.',
+    resets: 'Tonen wanneer de limieten resetten? Voegt bijv. "resets in 1h59m" toe achter elke limiet.',
+    context: 'Tonen hoe vol het contextvenster is? Bijv. "context 38%", in stoplichtkleuren. Als het vol is, moet Claude Code het gesprek samenvatten.',
+    model: 'Het model tonen? Bijv. "Opus 5.5".',
+    repo: 'Project en git-branch tonen? Bijv. "mijn-project · main ✗" (✗ = niet-gecommitte wijzigingen). Tokenomics voert daarvoor lokaal drie alleen-lezen git-commando’s uit; bij Nee geen enkele.',
+    lines: 'Gewijzigde regels tonen? Bijv. "+120 / −30 lines": toegevoegde en verwijderde regels sinds de laatste commit. De lijst per bestand: /tokenomics-changes.',
+    duration: 'De sessieduur tonen? Bijv. "1h30m" sinds de start.',
+  },
+  yes: 'Ja',
+  no: 'Nee',
   s3:
-    'Stap 3/4 - Kosten ook in een tweede valuta tonen? De dollar blijft altijd. ' +
+    'Kosten ook in een tweede valuta tonen? De dollar blijft altijd. ' +
     'In de volgende stap kies je de koers: een vaste die je typt, of de dagelijkse ECB-koers (optioneel). ' +
     'Kies er een of typ een andere code (bijv. JPY) onder Other.',
   s3usd: 'Alleen USD',
   s4: cur =>
-    `Stap 4/4 - Koers voor ${cur}: dagelijks de referentiekoers van de Europese Centrale Bank ophalen (optioneel: één klein internetverzoek per dag naar ecb.europa.eu, er wordt niets over jou verstuurd), of typ een vaste koers onder Other (bijv. 0.92).`,
+    `Koers voor ${cur}: dagelijks de referentiekoers van de Europese Centrale Bank ophalen (optioneel: één klein internetverzoek per dag naar ecb.europa.eu, er wordt niets over jou verstuurd), of typ een vaste koers onder Other (bijv. 0.92).`,
   s4o: ['Overslaan, alleen USD', 'Ik typ hem onder Other'],
   s4live: 'Dagelijkse ECB-koers (internet)',
   ecbDaily: 'dagelijkse ECB-koers',
@@ -244,27 +253,28 @@ const NL: Strings = {
   usdOnly: 'alleen USD',
   outro: 'Altijd te wijzigen met /tokenomics-setup. /tokenomics-explain legt de kosten uit.',
   cancelled: 'Instellen geannuleerd. Er is niets gewijzigd.',
-  names: { cost: 'kosten', limits: 'limieten', context: 'context', model: 'model', repo: 'project + git', duration: 'sessieduur' },
+  names: { cost: 'kosten', limits: 'limieten', context: 'context', model: 'model', repo: 'project + git', duration: 'sessieduur', resets: 'resettijden', lines: 'gewijzigde regels' },
 }
 
 const PT: Strings = {
-  s1:
-    'Passo 1/4 - Quanto a barra deve mostrar? Compact: só custo, limites e contexto, sem horários de reinício. ' +
-    'Normal: adiciona reinícios, modelo, projeto + branch git, linhas alteradas (+/-) e duração da sessão. ' +
-    'Full: mostra também a taxa de câmbio usada.',
-  s1o: ['Normal (recomendado)', 'Compact', 'Full'],
-  s2:
-    'Passo 2/4 - Quais extras devem aparecer? O custo aparece sempre. ' +
-    'Limites = uso 5h/7d (só com assinatura). Contexto = quão cheio está o contexto, mais o modelo. ' +
-    'Projeto = nome da pasta, branch git e ✗ para alterações sem commit.',
-  s2o: ['Limites (5h / 7d)', 'Contexto + modelo', 'Projeto + git', 'Duração da sessão'],
+  items: {
+    limits: 'Mostrar seus limites de uso? Os limites de 5 horas e 7 dias em porcentagem, nas cores de semáforo (verde até 50 %, amarelo △ até 75 %, vermelho ▲ acima). Só com assinatura.',
+    resets: 'Mostrar quando os limites reiniciam? Adiciona por ex. "resets in 1h59m" após cada limite.',
+    context: 'Mostrar quão cheio está o contexto? Por ex. "context 38%", nas cores de semáforo. Quando enche, o Claude Code precisa resumir a conversa.',
+    model: 'Mostrar o modelo? Por ex. "Opus 5.5".',
+    repo: 'Mostrar o projeto e a branch git? Por ex. "meu-projeto · main ✗" (✗ = alterações sem commit). Para isso o Tokenomics executa localmente três comandos git somente leitura; com Não, nenhum.',
+    lines: 'Mostrar as linhas alteradas? Por ex. "+120 / −30 lines": linhas adicionadas e removidas desde o último commit. A lista por arquivo: /tokenomics-changes.',
+    duration: 'Mostrar a duração da sessão? Por ex. "1h30m" desde o início.',
+  },
+  yes: 'Sim',
+  no: 'Não',
   s3:
-    'Passo 3/4 - Mostrar o custo também em outra moeda? O dólar fica sempre. ' +
+    'Mostrar o custo também em outra moeda? O dólar fica sempre. ' +
     'No próximo passo você escolhe a taxa: uma fixa que você digita ou a taxa diária do BCE (opcional). ' +
     'Escolha uma ou digite outro código (ex. JPY) em Other.',
   s3usd: 'Só USD',
   s4: cur =>
-    `Passo 4/4 - Taxa para ${cur}: buscar todo dia a taxa de referência do Banco Central Europeu (opcional: uma pequena requisição à internet por dia para ecb.europa.eu, nada sobre você é enviado), ou digitar uma taxa fixa em Other (ex. 0.92).`,
+    `Taxa para ${cur}: buscar todo dia a taxa de referência do Banco Central Europeu (opcional: uma pequena requisição à internet por dia para ecb.europa.eu, nada sobre você é enviado), ou digitar uma taxa fixa em Other (ex. 0.92).`,
   s4o: ['Pular, só USD', 'Vou digitar em Other'],
   s4live: 'Taxa diária do BCE (internet)',
   ecbDaily: 'taxa diária do BCE',
@@ -275,7 +285,7 @@ const PT: Strings = {
   usdOnly: 'só USD',
   outro: 'Altere quando quiser com /tokenomics-setup. /tokenomics-explain explica o custo.',
   cancelled: 'Configuração cancelada. Nada foi alterado.',
-  names: { cost: 'custo', limits: 'limites', context: 'contexto', model: 'modelo', repo: 'projeto + git', duration: 'duração' },
+  names: { cost: 'custo', limits: 'limites', context: 'contexto', model: 'modelo', repo: 'projeto + git', duration: 'duração', resets: 'reinícios', lines: 'linhas alteradas' },
 }
 
 export const LANGS: Lang[] = [

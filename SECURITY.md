@@ -38,7 +38,7 @@ Display glitches, wrong numbers or translation mistakes are normal bugs: please 
 What Tokenomics does and does not do, so you can check it yourself in `hooks/`:
 
 - **No network access by default.** No telemetry. The only request is opt-in: the public daily ECB reference rates (`ecb.europa.eu`), at most once per day, without any data about you.
-- **One program, read-only.** It runs only `git`, with three fixed read-only commands (`rev-parse`, `status`, `diff --numstat`), locally in the project folder, with a 5-second timeout. With *Project + git* switched off in `/tokenomics-setup`, it runs none.
+- **One program, read-only.** It runs only `git`, with three fixed read-only commands (`rev-parse`, `status`, `diff --numstat`), locally in the project folder, with a 5-second timeout. With *No* to project + git in `/tokenomics-setup` and the changes pane closed, it runs none.
 - **Minimal reading.** Session figures from Claude Code's plugin interface; your recent chat messages only during `/tokenomics-setup`, to guess your language, never stored or sent.
 - **Minimal storage.** Only your setup choices, in Claude Code's local plugin store.
 - **No dependencies.** No packages from npm or anywhere else; all code is in this repository.

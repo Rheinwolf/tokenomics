@@ -4,13 +4,13 @@ import type { EngineInterface, Register } from 'claude-code'
 import { baseName, parseChanges, parseEcbRate, parseRate, segments } from './format.ts'
 import type { ChangedFile, Segment } from './format.ts'
 import { byCode, detectLanguage, ENGLISH, parseLanguage } from './lang.ts'
-import type { Lang } from './lang.ts'
+import type { Item, Lang } from './lang.ts'
 import { explainText, VERSION } from './explain.ts'
 
-type Detail = 'compact' | 'normal' | 'full'
-type Group = 'limits' | 'context' | 'model' | 'repo' | 'duration'
+type Group = Item
 type Config = {
-  detail: Detail
+  /** Quick switch from /tokenomics: only cost, limits and context, no reset times. */
+  compact: boolean
   currency: string
   rate: number | null
   liveRate: boolean
@@ -30,7 +30,7 @@ type Repo = {
 type Ecb = { currency: string; rate: number; date: string; fetchedDay: string } | null
 
 const DEFAULTS: Config = {
-  detail: 'normal',
+  compact: false,
   currency: '',
   rate: null,
   liveRate: false,
@@ -41,8 +41,7 @@ const DEFAULTS: Config = {
 }
 const STORE_KEY = 'config'
 const ECB_KEY = 'ecb'
-const ORDER: Detail[] = ['compact', 'normal', 'full']
-const GROUPS: Group[] = ['limits', 'context', 'model', 'repo', 'duration']
+const GROUPS: Group[] = ['limits', 'resets', 'context', 'model', 'repo', 'lines', 'duration']
 const PANE = 'tokenomics-changes'
 
 const tick = atom({ plugin: 'tokenomics-bar', key: 'tick' } as const, 0)
@@ -54,15 +53,17 @@ function groupOf(key: string): Group | null {
   if (key.startsWith('limit-')) return 'limits'
   if (key === 'context') return 'context'
   if (key === 'model') return 'model'
-  if (key === 'repo' || key === 'lines') return 'repo'
+  if (key === 'repo') return 'repo'
+  if (key === 'lines') return 'lines'
   if (key === 'duration') return 'duration'
   return null
 }
 
 function sanitize(raw: unknown): Config {
-  const c = (raw && typeof raw === 'object' ? raw : {}) as Partial<Config>
+  const c = (raw && typeof raw === 'object' ? raw : {}) as Partial<Config> & { detail?: string }
   return {
-    detail: ORDER.includes(c.detail as Detail) ? (c.detail as Detail) : DEFAULTS.detail,
+    // Before 0.6.0 there was a detail level; "compact" carries over as the quick switch.
+    compact: typeof c.compact === 'boolean' ? c.compact : c.detail === 'compact',
     currency: typeof c.currency === 'string' ? c.currency.trim().toUpperCase().slice(0, 6) : '',
     rate: typeof c.rate === 'number' && Number.isFinite(c.rate) && c.rate > 0 ? c.rate : null,
     liveRate: c.liveRate === true,
@@ -92,8 +93,9 @@ async function saveConfig($: EngineInterface, config: Config): Promise<void> {
 
 async function refreshRepo($: EngineInterface): Promise<void> {
   try {
-    // Project + git switched off in the setup: run no git command at all.
-    if ((await read($, configAtom)).hidden.includes('repo')) return
+    // Project, changed lines and the changes pane all off: run no git command at all.
+    const cfg = await read($, configAtom)
+    if (cfg.hidden.includes('repo') && cfg.hidden.includes('lines') && !cfg.showPane) return
     const root = await $.session.root()
     const repo = {
       project: baseName(root),
@@ -176,42 +178,37 @@ async function askLanguage($: EngineInterface, saved: string): Promise<Lang> {
   return parseLanguage(answer) ?? ENGLISH
 }
 
-function pick(answer: string, labels: readonly string[]): number {
-  return labels.findIndex(l => l === answer.trim())
-}
-
 /** The step-by-step setup, using the app's own question dialog. */
 async function runSetup($: EngineInterface): Promise<string> {
   const current = await read($, configAtom)
   const lang = await askLanguage($, current.lang)
   const t = lang.t
-  const config: Config = { ...current, isSetUp: true, lang: lang.code }
+  const config: Config = { ...current, isSetUp: true, lang: lang.code, compact: false }
+  let n = 0
+  const step = (text: string) => `${++n} · ${text}`
 
-  // Step 1: detail level
-  const level = pick(await $.ui.ask(t.s1, { header: t.detail.slice(0, 12), options: t.s1o }), t.s1o)
-  config.detail = level === 1 ? 'compact' : level === 2 ? 'full' : 'normal'
-
-  // Step 2: which segments
-  const shown = await $.ui.ask(t.s2, { header: t.shows.slice(0, 12), multiSelect: true, options: t.s2o })
-  const picked = shown.split(',').map(s => s.trim())
-  const has = (i: number) => picked.includes(t.s2o[i])
+  // One yes/no question per item, each with its own explanation. "Other" text counts as yes.
   const hidden: Group[] = []
-  if (!has(0)) hidden.push('limits')
-  if (!has(1)) hidden.push('context', 'model')
-  if (!has(2)) hidden.push('repo')
-  if (!has(3)) hidden.push('duration')
+  for (const item of GROUPS) {
+    if (item === 'lines' && hidden.includes('repo')) {
+      hidden.push('lines') // changed lines come from git; no project + git, no lines
+      continue
+    }
+    const answer = await $.ui.ask(step(t.items[item]), { header: t.names[item].slice(0, 12), options: [t.yes, t.no] })
+    if (answer.trim() === t.no) hidden.push(item)
+  }
   config.hidden = hidden
 
-  // Step 3: second currency
-  const cur = (await $.ui.ask(t.s3, { header: t.currency.slice(0, 12), options: [t.s3usd, 'EUR', 'GBP', 'CHF'] })).trim()
+  // Second currency
+  const cur = (await $.ui.ask(step(t.s3), { header: t.currency.slice(0, 12), options: [t.s3usd, 'EUR', 'GBP', 'CHF'] })).trim()
   const code = cur === t.s3usd ? '' : cur.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6)
   config.currency = code === 'USD' ? '' : code
   config.rate = null
   config.liveRate = false
 
-  // Step 4: daily ECB rate (opt-in) or a fixed rate typed under Other
+  // Rate: daily ECB rate (opt-in) or a fixed rate typed under Other
   if (config.currency) {
-    const answer = await $.ui.ask(t.s4(config.currency), { header: 'Rate', options: [t.s4live, t.s4o[0]] })
+    const answer = await $.ui.ask(step(t.s4(config.currency)), { header: 'Rate', options: [t.s4live, t.s4o[0]] })
     if (answer.trim() === t.s4live) {
       config.liveRate = true
     } else {
@@ -236,7 +233,6 @@ async function runSetup($: EngineInterface): Promise<string> {
   const visible = ['cost' as const, ...GROUPS.filter(g => !hidden.includes(g))].map(g => t.names[g])
   return [
     t.done,
-    `  ${t.detail}: ${config.detail}`,
     `  ${t.shows}: ${visible.join(', ')}`,
     `  ${t.currency}: ${currencyText}`,
     '',
@@ -262,7 +258,7 @@ async function resetCommand($: EngineInterface) {
     await $.ui.close({ id: PANE })
   } catch {}
   return {
-    text: 'Tokenomics: back to defaults (normal, everything visible, USD only, changes pane closed). Run /tokenomics-setup to choose again.',
+    text: 'Tokenomics: back to defaults (everything visible, USD only, changes pane closed). Run /tokenomics-setup to choose again.',
     isTextDisplayOnly: true as const,
   }
 }
@@ -291,11 +287,11 @@ async function changesCommand($: EngineInterface) {
 
 async function registerCommands($: EngineInterface): Promise<void> {
   const commands = [
-    ['tokenomics', 'Switch the Tokenomics bar: compact, normal or full (no argument cycles through them)'],
-    ['tokenomics-setup', 'Set up the Tokenomics bar step by step (language, detail level, segments, currency)'],
+    ['tokenomics', 'Switch the Tokenomics bar between compact and your own selection'],
+    ['tokenomics-setup', 'Set up the Tokenomics bar: one question per item, with an explanation'],
     ['tokenomics-explain', 'Explain the Tokenomics cost figure (API cost vs. API value on a subscription)'],
     ['tokenomics-changes', 'Open or close a pane listing every changed file since the last commit'],
-    ['tokenomics-reset', 'Reset the Tokenomics bar to its defaults (normal, everything visible, USD only)'],
+    ['tokenomics-reset', 'Reset the Tokenomics bar to its defaults (everything visible, USD only)'],
   ] as const
   for (const [name, description] of commands) {
     try {
@@ -325,12 +321,16 @@ export const register: Register = on => {
     if (arg === 'setup') return setupCommand($)
     if (arg === 'reset') return resetCommand($)
     if (arg === 'changes') return changesCommand($)
+    // Quick switch: compact (cost, limits, context) <-> your own selection from the setup.
     const current = await read($, configAtom)
-    const nextLevel: Detail = ORDER.includes(arg as Detail)
-      ? (arg as Detail)
-      : ORDER[(ORDER.indexOf(current.detail) + 1) % ORDER.length]
-    await saveConfig($, { ...current, detail: nextLevel })
-    return { text: `Tokenomics: ${nextLevel}`, isTextDisplayOnly: true }
+    const compact = arg === 'compact' ? true : arg === 'normal' || arg === 'full' ? false : !current.compact
+    await saveConfig($, { ...current, compact })
+    return {
+      text: compact
+        ? 'Tokenomics: compact (cost, limits, context). Run /tokenomics again for your own selection.'
+        : 'Tokenomics: your own selection from /tokenomics-setup. Run /tokenomics again for compact.',
+      isTextDisplayOnly: true,
+    }
   })
 
   on('command.run', { command: 'tokenomics-setup' }, async ($, e) => setupCommand($))
@@ -427,7 +427,8 @@ export const register: Register = on => {
         dirty: repo?.dirty,
         added: repo?.added,
         removed: repo?.removed,
-        detail: config.detail,
+        detail: config.compact ? 'compact' : 'full',
+        resets: !config.hidden.includes('resets'),
         currency: config.currency || undefined,
         rate: live ? live.rate : (config.rate ?? undefined),
         rateSource: live ? `ECB ${live.date}` : undefined,

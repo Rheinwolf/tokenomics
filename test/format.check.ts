@@ -89,3 +89,7 @@ assert.equal(live[0].text, 'API cost this session: $10.00 (≈ 9.52 EUR · ECB 2
 const normalLines = segments({ now, detail: 'normal', rateLimits: [], project: 'p', added: 5, removed: 2 })
 assert.ok(normalLines.some(s => s.text === '+5 / −2 lines'), 'lines show in normal mode')
 console.log('Changes and ECB checks passed.')
+
+const noResets = segments({ now, detail: 'full', resets: false, rateLimits: [{ kind: 'five_hour', percentUsed: 20, resetsAt: '2026-11-26T13:00:00Z' }] })
+assert.equal(noResets[0].text, '5h limit 20%')
+console.log('Resets switch checks passed.')
