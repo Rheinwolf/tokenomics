@@ -49,7 +49,7 @@ Type `/session-bar explain` for this explanation inside the app.
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install session-bar --marketplace OWNER/session-bar
+/plugin install session-bar --marketplace Rheinwolf/session-bar
 ```
 
 Answer `y` to add the marketplace, then pick a scope (user scope = every session).
@@ -57,10 +57,10 @@ Answer `y` to add the marketplace, then pick a scope (user scope = every session
 From a shell:
 
 ```
-claude plugin install session-bar --marketplace OWNER/session-bar
+claude plugin install session-bar --marketplace Rheinwolf/session-bar
 ```
 
-In the **desktop app** (where `/plugin` does not run): click **+** next to the prompt box → **Plugins** → **Add marketplace** with `OWNER/session-bar` → **Add plugin**.
+In the **desktop app** (where `/plugin` does not run): click **+** next to the prompt box → **Plugins** → **Add marketplace** with `Rheinwolf/session-bar` → **Add plugin**.
 
 Installed at the user scope from a terminal, the bar also shows in the desktop app's Code tab.
 
