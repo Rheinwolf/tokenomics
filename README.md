@@ -2,12 +2,12 @@
 
 # Tokenomics
 
-**Version 0.4.4** · MIT license · [Changelog](CHANGELOG.md)
+**Version 0.4.5** · MIT license · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.4.4  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.4.5  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -152,6 +152,8 @@ Only your setup choices (language, detail level, visible segments, currency and 
 | `ui.render` (`AbovePrompt`) | draws the bar above the prompt |
 
 Tokenomics uses no other plugin and calls nothing outside Claude Code's own plugin interface.
+
+Found a security problem? Please report it privately, see [SECURITY.md](SECURITY.md).
 
 ## Development
 

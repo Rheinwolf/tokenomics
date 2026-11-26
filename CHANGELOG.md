@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.5
+- Added a security policy (SECURITY.md): supported versions, private reporting through GitHub, what counts as a security issue, security design
+
 ## 0.4.4
 - Changelog no longer names the icon's file path (the plugin directory flagged it)
 
