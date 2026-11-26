@@ -27,6 +27,8 @@ export type Input = {
   detail: 'compact' | 'normal' | 'full'
   currency?: string
   rate?: number
+  /** Shown instead of "@ rate" in full mode, e.g. "ECB 2026-11-26". */
+  rateSource?: string
 }
 
 /** "1h59m", "3d11h", "42m", "<1m". */
@@ -84,7 +86,8 @@ export function segments(i: Input): Segment[] {
   if (typeof i.costUsd === 'number' && Number.isFinite(i.costUsd)) {
     let value = money(i.costUsd)
     if (i.currency && i.rate && i.rate > 0) {
-      value += ` (≈ ${(i.costUsd * i.rate).toFixed(2)} ${i.currency}${full ? ` @ ${i.rate}` : ''})`
+      const rateNote = i.rateSource ? ` · ${i.rateSource}` : ` @ ${i.rate}`
+      value += ` (≈ ${(i.costUsd * i.rate).toFixed(2)} ${i.currency}${full ? rateNote : ''})`
     }
     if (i.hasUnknownPrice) value += '*'
     const label = subscription
@@ -126,7 +129,7 @@ export function segments(i: Input): Segment[] {
     out.push({ key: 'repo', text, level: 'ok', hint: i.dirty ? 'Uncommitted changes' : undefined })
   }
 
-  if (full && typeof i.added === 'number' && typeof i.removed === 'number' && (i.added || i.removed)) {
+  if (!compact && typeof i.added === 'number' && typeof i.removed === 'number' && (i.added || i.removed)) {
     out.push({
       key: 'lines',
       text: `+${i.added} / −${i.removed} lines`,
@@ -160,4 +163,45 @@ export function parseNumstat(out: string): { added: number; removed: number } {
     removed += Number(r) || 0
   }
   return { added, removed }
+}
+
+export type ChangedFile = { path: string; added: number; removed: number; isNew: boolean; isBinary: boolean }
+
+/**
+ * Files changed since the last commit, from `git diff --numstat HEAD` (tracked files)
+ * and `git status --porcelain` (new, untracked files: lines "?? path").
+ */
+export function parseChanges(numstat: string, status: string): ChangedFile[] {
+  const files: ChangedFile[] = []
+  for (const line of numstat.split(/\r?\n/)) {
+    const [a, r, ...rest] = line.split('\t')
+    const path = rest.join('\t')
+    if (a === undefined || r === undefined || !path) continue
+    const isBinary = a === '-' && r === '-'
+    files.push({ path, added: Number(a) || 0, removed: Number(r) || 0, isNew: false, isBinary })
+  }
+  for (const line of status.split(/\r?\n/)) {
+    if (!line.startsWith('?? ')) continue
+    const path = line.slice(3).replace(/^"|"$/g, '')
+    if (!files.some(f => f.path === path)) files.push({ path, added: 0, removed: 0, isNew: true, isBinary: false })
+  }
+  return files.sort((x, y) => y.added + y.removed - (x.added + x.removed) || x.path.localeCompare(y.path))
+}
+
+/**
+ * Reads the European Central Bank's daily reference rates (eurofxref-daily.xml, euro based)
+ * and returns how much 1 USD is in `currency`, with the ECB's date. Null when missing.
+ */
+export function parseEcbRate(xml: string, currency: string): { rate: number; date: string } | null {
+  const date = /time=['"](\d{4}-\d{2}-\d{2})['"]/.exec(xml)?.[1]
+  const rateOf = (cur: string): number | null => {
+    if (cur === 'EUR') return 1
+    const m = new RegExp(`currency=['"]${cur}['"][\\s]+rate=['"]([0-9.]+)['"]`).exec(xml)
+    const n = m ? Number(m[1]) : NaN
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+  const usd = rateOf('USD')
+  const target = /^[A-Z]{3}$/.test(currency) ? rateOf(currency) : null
+  if (!date || !usd || !target) return null
+  return { rate: Math.round((target / usd) * 10000) / 10000, date }
 }

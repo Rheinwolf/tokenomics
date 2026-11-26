@@ -25,7 +25,8 @@ Only you and the maintainer can see the report. Tokenomics is a hobby project ma
 
 For example:
 
-- Tokenomics sending any data anywhere (it is designed to send nothing)
+- Tokenomics sending any data about you anywhere (it is designed to send nothing)
+- Tokenomics making any network request other than the opt-in daily ECB download, or making it when you did not choose it
 - Tokenomics running anything other than the three documented read-only git commands
 - Tokenomics reading data beyond what the README lists, or storing it
 - A way to make Tokenomics run code or commands supplied by someone else
@@ -36,7 +37,7 @@ Display glitches, wrong numbers or translation mistakes are normal bugs: please 
 
 What Tokenomics does and does not do, so you can check it yourself in `hooks/`:
 
-- **No network access.** No requests, no telemetry, nothing is loaded from the internet.
+- **No network access by default.** No telemetry. The only request is opt-in: the public daily ECB reference rates (`ecb.europa.eu`), at most once per day, without any data about you.
 - **One program, read-only.** It runs only `git`, with three fixed read-only commands (`rev-parse`, `status`, `diff --numstat`), locally in the project folder, with a 5-second timeout. With *Project + git* switched off in `/tokenomics-setup`, it runs none.
 - **Minimal reading.** Session figures from Claude Code's plugin interface; your recent chat messages only during `/tokenomics-setup`, to guess your language, never stored or sent.
 - **Minimal storage.** Only your setup choices, in Claude Code's local plugin store.

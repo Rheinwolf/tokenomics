@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+- New `/tokenomics-changes`: a pane beside the chat listing every file changed since the last commit, with +/− lines per file and new files marked
+- Changed lines (`+/− lines`) now show in normal mode too; full mode additionally shows the exchange rate used
+- Opt-in daily exchange rate from the European Central Bank: chosen in step 4 of `/tokenomics-setup`, at most one request per day to ecb.europa.eu, cached locally, nothing about you is sent. Without opting in, Tokenomics still makes no network request at all
+- README, SECURITY.md, CONTRIBUTING.md, wiki and all setup/explain translations updated accordingly
+
 ## 0.4.8
 - README and wiki: clearer installation guide: which way fits which use (desktop app, terminal, team project, development), the three scopes, and what to do when `claude` is not recognized
 

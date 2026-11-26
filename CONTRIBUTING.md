@@ -42,7 +42,7 @@ node test/format.check.ts
 ### Rules that matter
 
 - **Pass `$` only to functions declared at the top of the file.** Claude Code refuses a mod that hands `$` to a nested function, and the old version keeps running silently.
-- **No network access, no new programs.** Tokenomics sends nothing and runs only the three documented read-only git commands. Anything else needs a very good reason and an update to the README's Privacy section and SECURITY.md.
+- **No new network access, no new programs.** Tokenomics sends nothing about the user, makes no request except the opt-in daily ECB download, and runs only the three documented read-only git commands. Anything else needs a very good reason and an update to the README's Privacy section and SECURITY.md.
 - **Pure logic goes in `hooks/format.ts`**, so it can be tested with plain Node.
 - **Missing data hides a segment.** Never guess or invent a value.
 - **English** for code, comments and the bar.

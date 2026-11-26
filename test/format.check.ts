@@ -67,3 +67,25 @@ import { parseNumstat } from '../hooks/format.ts'
 assert.deepEqual(parseNumstat('12\t3\ta.ts\n-\t-\timg.png\n5\t0\tb.ts\n'), { added: 17, removed: 3 })
 assert.deepEqual(parseNumstat(''), { added: 0, removed: 0 })
 console.log('Numstat checks passed.')
+
+// Changed files and ECB rates
+import { parseChanges, parseEcbRate } from '../hooks/format.ts'
+const files = parseChanges('3\t1\tsmall.ts\n40\t10\tbig.ts\n-\t-\tlogo.png\n', ' M big.ts\n?? new file.md\n?? "quoted.md"\n')
+assert.deepEqual(files.map(f => f.path), ['big.ts', 'small.ts', 'logo.png', 'new file.md', 'quoted.md'])
+assert.equal(files[0].added, 40); assert.equal(files[2].isBinary, true); assert.equal(files[3].isNew, true)
+assert.deepEqual(parseChanges('', ''), [])
+
+const ecb = `<gesmes:Envelope><Cube><Cube time='2026-11-26'>
+  <Cube currency='USD' rate='1.0500'/><Cube currency='GBP' rate='0.8400'/><Cube currency='CHF' rate='0.9450'/>
+</Cube></Cube></gesmes:Envelope>`
+assert.deepEqual(parseEcbRate(ecb, 'EUR'), { rate: 0.9524, date: '2026-11-26' })
+assert.deepEqual(parseEcbRate(ecb, 'GBP'), { rate: 0.8, date: '2026-11-26' })
+assert.deepEqual(parseEcbRate(ecb, 'CHF'), { rate: 0.9, date: '2026-11-26' })
+assert.equal(parseEcbRate(ecb, 'XYZ'), null)
+assert.equal(parseEcbRate('<html>error</html>', 'EUR'), null)
+
+const live = segments({ now, costUsd: 10, detail: 'full', rateLimits: [], currency: 'EUR', rate: 0.9524, rateSource: 'ECB 2026-11-26' })
+assert.equal(live[0].text, 'API cost this session: $10.00 (≈ 9.52 EUR · ECB 2026-11-26)')
+const normalLines = segments({ now, detail: 'normal', rateLimits: [], project: 'p', added: 5, removed: 2 })
+assert.ok(normalLines.some(s => s.text === '+5 / −2 lines'), 'lines show in normal mode')
+console.log('Changes and ECB checks passed.')
