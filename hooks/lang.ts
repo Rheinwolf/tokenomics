@@ -19,10 +19,15 @@ export type Strings = {
   usdOnly: string
   outro: string
   cancelled: string
+  s5: string // cost warning question
+  s5none: string
+  s6: string // limit notice question
+  costWarn: string // summary label
+  alerts: string // summary label
   names: Record<'cost' | Item, string>
 }
 
-export type Item = 'limits' | 'resets' | 'context' | 'model' | 'repo' | 'lines' | 'duration'
+export type Item = 'limits' | 'resets' | 'context' | 'model' | 'repo' | 'lines' | 'perline' | 'today' | 'duration'
 
 export type Lang = {
   code: string
@@ -40,6 +45,8 @@ const EN: Strings = {
     model: 'Show the model? E.g. "Opus 5.5".',
     repo: 'Show the project and git branch? E.g. "my-project · main ✗" (✗ = uncommitted changes). Tokenomics runs three read-only git commands for this, locally; choosing No runs none.',
     lines: 'Show the changed lines? E.g. "+120 / −30 lines": lines added and removed since the last commit. The full list per file: /tokenomics-changes.',
+    perline: "Show the cost per changed line? E.g. \"$0.03 / line\": this session's cost divided by the changed lines. Just for fun, not a measure of quality.",
+    today: "Show today's total? E.g. \"today $12.40\": the cost or API value of all sessions today on this computer, shown once you have more than one session. Stored locally only.",
     duration: 'Show the session time? E.g. "1h30m" since the session started.',
   },
   yes: 'Yes',
@@ -61,7 +68,12 @@ const EN: Strings = {
   usdOnly: 'USD only',
   outro: 'Change it any time with /tokenomics-setup. /tokenomics-explain explains the cost figure.',
   cancelled: 'Tokenomics setup cancelled. Nothing was changed.',
-  names: { cost: 'cost', limits: 'limits', context: 'context', model: 'model', repo: 'project + git', duration: 'session time', resets: 'reset times', lines: 'changed lines' },
+  s5: "Warn when the session cost gets high? The cost turns yellow △ at the first amount and red ▲ at the second (in USD). Pick the suggestion, or type your own two amounts under Other (e.g. \"5/20\").",
+  s5none: "No warning",
+  s6: "Show a short notice when a usage limit goes above 75 %? Once per limit and reset period, so you notice it even without looking at the bar.",
+  costWarn: "Cost warning",
+  alerts: "Limit notice",
+  names: { cost: 'cost', limits: 'limits', context: 'context', model: 'model', repo: 'project + git', duration: 'session time', resets: 'reset times', lines: 'changed lines', today: "today's total", perline: "cost per line" },
 }
 
 const DE: Strings = {
@@ -72,6 +84,8 @@ const DE: Strings = {
     model: 'Das Modell anzeigen? Z. B. „Opus 5.5“.',
     repo: 'Projekt und Git-Zweig anzeigen? Z. B. „mein-projekt · main ✗“ (✗ = ungespeicherte Änderungen). Dafür führt Tokenomics lokal drei nur lesende Git-Befehle aus; bei Nein keinen.',
     lines: 'Geänderte Zeilen anzeigen? Z. B. „+120 / −30 lines“: hinzugefügte und entfernte Zeilen seit dem letzten Commit. Die Liste pro Datei: /tokenomics-changes.',
+    perline: "Kosten pro geänderter Zeile anzeigen? Z. B. „$0.03 / line“: Kosten der Sitzung geteilt durch die geänderten Zeilen. Eher zum Spaß, kein Maß für Qualität.",
+    today: "Tagessumme anzeigen? Z. B. „today $12.40“: Kosten bzw. API-Wert aller heutigen Sitzungen auf diesem Rechner, sobald du mehr als eine Sitzung hattest. Wird nur lokal gespeichert.",
     duration: 'Die Sitzungsdauer anzeigen? Z. B. „1h30m“ seit Beginn der Sitzung.',
   },
   yes: 'Ja',
@@ -93,7 +107,12 @@ const DE: Strings = {
   usdOnly: 'nur USD',
   outro: 'Jederzeit änderbar mit /tokenomics-setup. /tokenomics-explain erklärt die Kosten-Anzeige.',
   cancelled: 'Einrichtung abgebrochen. Nichts wurde geändert.',
-  names: { cost: 'Kosten', limits: 'Kontingente', context: 'Kontext', model: 'Modell', repo: 'Projekt + Git', duration: 'Sitzungsdauer', resets: 'Reset-Zeiten', lines: 'geänderte Zeilen' },
+  s5: "Warnen, wenn die Sitzung teuer wird? Die Kosten werden beim ersten Betrag gelb △ und beim zweiten rot ▲ (in USD). Vorschlag wählen oder unter Other eigene zwei Beträge eintippen (z. B. „5/20“).",
+  s5none: "Keine Warnung",
+  s6: "Kurzen Hinweis zeigen, wenn ein Kontingent über 75 % steigt? Einmal pro Kontingent und Zeitraum, damit du es auch ohne Blick auf die Leiste merkst.",
+  costWarn: "Kostenwarnung",
+  alerts: "Limit-Hinweis",
+  names: { cost: 'Kosten', limits: 'Kontingente', context: 'Kontext', model: 'Modell', repo: 'Projekt + Git', duration: 'Sitzungsdauer', resets: 'Reset-Zeiten', lines: 'geänderte Zeilen', today: "Tagessumme", perline: "Kosten pro Zeile" },
 }
 
 const FR: Strings = {
@@ -104,6 +123,8 @@ const FR: Strings = {
     model: 'Afficher le modèle ? Par ex. « Opus 5.5 ».',
     repo: 'Afficher le projet et la branche git ? Par ex. « mon-projet · main ✗ » (✗ = modifications non commitées). Tokenomics exécute pour cela trois commandes git en lecture seule, localement ; avec Non, aucune.',
     lines: 'Afficher les lignes modifiées ? Par ex. « +120 / −30 lines » : lignes ajoutées et supprimées depuis le dernier commit. La liste par fichier : /tokenomics-changes.',
+    perline: "Afficher le coût par ligne modifiée ? Ex. « $0.03 / line » : le coût de la session divisé par les lignes modifiées. Pour le plaisir, pas une mesure de qualité.",
+    today: "Afficher le total du jour ? Ex. « today $12.40 » : le coût ou la valeur API de toutes les sessions du jour sur cet ordinateur, affiché dès que vous avez plus d'une session. Stocké uniquement en local.",
     duration: 'Afficher la durée de la session ? Par ex. « 1h30m » depuis le début.',
   },
   yes: 'Oui',
@@ -125,7 +146,12 @@ const FR: Strings = {
   usdOnly: 'USD seulement',
   outro: 'Modifiable à tout moment avec /tokenomics-setup. /tokenomics-explain explique le coût.',
   cancelled: 'Configuration annulée. Rien n’a été modifié.',
-  names: { cost: 'coût', limits: 'limites', context: 'contexte', model: 'modèle', repo: 'projet + git', duration: 'durée', resets: 'réinitialisations', lines: 'lignes modifiées' },
+  s5: "Avertir quand la session devient chère ? Le coût passe en jaune △ au premier montant et en rouge ▲ au second (en USD). Choisissez la suggestion ou tapez vos deux montants sous Other (ex. « 5/20 »).",
+  s5none: "Pas d'avertissement",
+  s6: "Afficher une courte notification quand un quota dépasse 75 % ? Une fois par quota et par période, pour le remarquer même sans regarder la barre.",
+  costWarn: "Alerte coût",
+  alerts: "Avis quota",
+  names: { cost: 'coût', limits: 'limites', context: 'contexte', model: 'modèle', repo: 'projet + git', duration: 'durée', resets: 'réinitialisations', lines: 'lignes modifiées', today: "total du jour", perline: "coût par ligne" },
 }
 
 const ES: Strings = {
@@ -136,6 +162,8 @@ const ES: Strings = {
     model: '¿Mostrar el modelo? P. ej. «Opus 5.5».',
     repo: '¿Mostrar el proyecto y la rama git? P. ej. «mi-proyecto · main ✗» (✗ = cambios sin commit). Para ello Tokenomics ejecuta localmente tres comandos git de solo lectura; con No, ninguno.',
     lines: '¿Mostrar las líneas cambiadas? P. ej. «+120 / −30 lines»: líneas añadidas y eliminadas desde el último commit. La lista por archivo: /tokenomics-changes.',
+    perline: "¿Mostrar el coste por línea cambiada? Ej. «$0.03 / line»: el coste de la sesión dividido entre las líneas cambiadas. Por diversión, no mide la calidad.",
+    today: "¿Mostrar el total del día? Ej. «today $12.40»: el coste o valor API de todas las sesiones de hoy en este ordenador, visible cuando tienes más de una sesión. Solo se guarda localmente.",
     duration: '¿Mostrar la duración de la sesión? P. ej. «1h30m» desde el inicio.',
   },
   yes: 'Sí',
@@ -157,7 +185,12 @@ const ES: Strings = {
   usdOnly: 'solo USD',
   outro: 'Cámbialo cuando quieras con /tokenomics-setup. /tokenomics-explain explica el coste.',
   cancelled: 'Configuración cancelada. No se cambió nada.',
-  names: { cost: 'coste', limits: 'límites', context: 'contexto', model: 'modelo', repo: 'proyecto + git', duration: 'duración', resets: 'reinicios', lines: 'líneas cambiadas' },
+  s5: "¿Avisar cuando la sesión sale cara? El coste se pone amarillo △ en el primer importe y rojo ▲ en el segundo (en USD). Elige la sugerencia o escribe tus dos importes en Other (ej. «5/20»).",
+  s5none: "Sin aviso",
+  s6: "¿Mostrar un aviso breve cuando un límite supere el 75 %? Una vez por límite y periodo, para notarlo sin mirar la barra.",
+  costWarn: "Aviso coste",
+  alerts: "Aviso límite",
+  names: { cost: 'coste', limits: 'límites', context: 'contexto', model: 'modelo', repo: 'proyecto + git', duration: 'duración', resets: 'reinicios', lines: 'líneas cambiadas', today: "total del día", perline: "coste por línea" },
 }
 
 const IT: Strings = {
@@ -168,6 +201,8 @@ const IT: Strings = {
     model: 'Mostrare il modello? Ad es. «Opus 5.5».',
     repo: 'Mostrare il progetto e il branch git? Ad es. «mio-progetto · main ✗» (✗ = modifiche non committate). Per questo Tokenomics esegue localmente tre comandi git di sola lettura; con No, nessuno.',
     lines: 'Mostrare le righe modificate? Ad es. «+120 / −30 lines»: righe aggiunte e rimosse dall’ultimo commit. L’elenco per file: /tokenomics-changes.',
+    perline: "Mostrare il costo per riga modificata? Es. «$0.03 / line»: costo della sessione diviso per le righe modificate. Per divertimento, non misura la qualità.",
+    today: "Mostrare il totale del giorno? Es. «today $12.40»: costo o valore API di tutte le sessioni di oggi su questo computer, visibile quando hai più di una sessione. Salvato solo in locale.",
     duration: 'Mostrare la durata della sessione? Ad es. «1h30m» dall’inizio.',
   },
   yes: 'Sì',
@@ -189,7 +224,12 @@ const IT: Strings = {
   usdOnly: 'solo USD',
   outro: 'Modificabile in ogni momento con /tokenomics-setup. /tokenomics-explain spiega il costo.',
   cancelled: 'Configurazione annullata. Nulla è stato modificato.',
-  names: { cost: 'costo', limits: 'limiti', context: 'contesto', model: 'modello', repo: 'progetto + git', duration: 'durata', resets: 'azzeramenti', lines: 'righe modificate' },
+  s5: "Avvisare quando la sessione diventa costosa? Il costo diventa giallo △ al primo importo e rosso ▲ al secondo (in USD). Scegli il suggerimento o scrivi i tuoi due importi sotto Other (es. «5/20»).",
+  s5none: "Nessun avviso",
+  s6: "Mostrare un breve avviso quando un limite supera il 75 %? Una volta per limite e periodo, così lo noti anche senza guardare la barra.",
+  costWarn: "Avviso costo",
+  alerts: "Avviso limite",
+  names: { cost: 'costo', limits: 'limiti', context: 'contesto', model: 'modello', repo: 'progetto + git', duration: 'durata', resets: 'azzeramenti', lines: 'righe modificate', today: "totale del giorno", perline: "costo per riga" },
 }
 
 const PL: Strings = {
@@ -200,6 +240,8 @@ const PL: Strings = {
     model: 'Pokazywać model? Np. „Opus 5.5”.',
     repo: 'Pokazywać projekt i gałąź git? Np. „moj-projekt · main ✗” (✗ = niezatwierdzone zmiany). Tokenomics uruchamia w tym celu lokalnie trzy polecenia git tylko do odczytu; przy Nie żadnego.',
     lines: 'Pokazywać zmienione linie? Np. „+120 / −30 lines”: linie dodane i usunięte od ostatniego commita. Lista dla każdego pliku: /tokenomics-changes.',
+    perline: "Pokazać koszt na zmienioną linię? Np. „$0.03 / line”: koszt sesji podzielony przez zmienione linie. Dla zabawy, nie mierzy jakości.",
+    today: "Pokazać dzisiejszą sumę? Np. „today $12.40”: koszt lub wartość API wszystkich dzisiejszych sesji na tym komputerze, widoczne przy więcej niż jednej sesji. Zapisywane tylko lokalnie.",
     duration: 'Pokazywać czas sesji? Np. „1h30m” od jej rozpoczęcia.',
   },
   yes: 'Tak',
@@ -221,7 +263,12 @@ const PL: Strings = {
   usdOnly: 'tylko USD',
   outro: 'Zmień w każdej chwili przez /tokenomics-setup. /tokenomics-explain wyjaśnia koszt.',
   cancelled: 'Konfiguracja przerwana. Nic nie zostało zmienione.',
-  names: { cost: 'koszt', limits: 'limity', context: 'kontekst', model: 'model', repo: 'projekt + git', duration: 'czas sesji', resets: 'czas resetu', lines: 'zmienione linie' },
+  s5: "Ostrzegać, gdy sesja robi się droga? Koszt zmienia kolor na żółty △ przy pierwszej kwocie i czerwony ▲ przy drugiej (w USD). Wybierz propozycję lub wpisz własne dwie kwoty w Other (np. „5/20”).",
+  s5none: "Bez ostrzeżenia",
+  s6: "Pokazać krótkie powiadomienie, gdy limit przekroczy 75 %? Raz na limit i okres, żeby było to widać bez patrzenia na pasek.",
+  costWarn: "Ostrzeżenie",
+  alerts: "Powiadomienie",
+  names: { cost: 'koszt', limits: 'limity', context: 'kontekst', model: 'model', repo: 'projekt + git', duration: 'czas sesji', resets: 'czas resetu', lines: 'zmienione linie', today: "suma dnia", perline: "koszt na linię" },
 }
 
 const NL: Strings = {
@@ -232,6 +279,8 @@ const NL: Strings = {
     model: 'Het model tonen? Bijv. "Opus 5.5".',
     repo: 'Project en git-branch tonen? Bijv. "mijn-project · main ✗" (✗ = niet-gecommitte wijzigingen). Tokenomics voert daarvoor lokaal drie alleen-lezen git-commando’s uit; bij Nee geen enkele.',
     lines: 'Gewijzigde regels tonen? Bijv. "+120 / −30 lines": toegevoegde en verwijderde regels sinds de laatste commit. De lijst per bestand: /tokenomics-changes.',
+    perline: "Kosten per gewijzigde regel tonen? Bijv. \"$0.03 / line\": kosten van de sessie gedeeld door de gewijzigde regels. Voor de lol, geen maat voor kwaliteit.",
+    today: "Dagtotaal tonen? Bijv. \"today $12.40\": kosten of API-waarde van alle sessies van vandaag op deze computer, zichtbaar zodra je meer dan één sessie hebt. Alleen lokaal opgeslagen.",
     duration: 'De sessieduur tonen? Bijv. "1h30m" sinds de start.',
   },
   yes: 'Ja',
@@ -253,7 +302,12 @@ const NL: Strings = {
   usdOnly: 'alleen USD',
   outro: 'Altijd te wijzigen met /tokenomics-setup. /tokenomics-explain legt de kosten uit.',
   cancelled: 'Instellen geannuleerd. Er is niets gewijzigd.',
-  names: { cost: 'kosten', limits: 'limieten', context: 'context', model: 'model', repo: 'project + git', duration: 'sessieduur', resets: 'resettijden', lines: 'gewijzigde regels' },
+  s5: "Waarschuwen als de sessie duur wordt? De kosten worden geel △ bij het eerste bedrag en rood ▲ bij het tweede (in USD). Kies de suggestie of typ je eigen twee bedragen onder Other (bijv. \"5/20\").",
+  s5none: "Geen waarschuwing",
+  s6: "Korte melding tonen als een limiet boven 75 % komt? Eén keer per limiet en periode, zodat je het merkt zonder naar de balk te kijken.",
+  costWarn: "Kostenalarm",
+  alerts: "Limietmelding",
+  names: { cost: 'kosten', limits: 'limieten', context: 'context', model: 'model', repo: 'project + git', duration: 'sessieduur', resets: 'resettijden', lines: 'gewijzigde regels', today: "dagtotaal", perline: "kosten per regel" },
 }
 
 const PT: Strings = {
@@ -264,6 +318,8 @@ const PT: Strings = {
     model: 'Mostrar o modelo? Por ex. "Opus 5.5".',
     repo: 'Mostrar o projeto e a branch git? Por ex. "meu-projeto · main ✗" (✗ = alterações sem commit). Para isso o Tokenomics executa localmente três comandos git somente leitura; com Não, nenhum.',
     lines: 'Mostrar as linhas alteradas? Por ex. "+120 / −30 lines": linhas adicionadas e removidas desde o último commit. A lista por arquivo: /tokenomics-changes.',
+    perline: "Mostrar o custo por linha alterada? Ex. \"$0.03 / line\": custo da sessão dividido pelas linhas alteradas. Por diversão, não mede qualidade.",
+    today: "Mostrar o total do dia? Ex. \"today $12.40\": custo ou valor API de todas as sessões de hoje neste computador, visível quando há mais de uma sessão. Guardado só localmente.",
     duration: 'Mostrar a duração da sessão? Por ex. "1h30m" desde o início.',
   },
   yes: 'Sim',
@@ -285,7 +341,12 @@ const PT: Strings = {
   usdOnly: 'só USD',
   outro: 'Altere quando quiser com /tokenomics-setup. /tokenomics-explain explica o custo.',
   cancelled: 'Configuração cancelada. Nada foi alterado.',
-  names: { cost: 'custo', limits: 'limites', context: 'contexto', model: 'modelo', repo: 'projeto + git', duration: 'duração', resets: 'reinícios', lines: 'linhas alteradas' },
+  s5: "Avisar quando a sessão ficar cara? O custo fica amarelo △ no primeiro valor e vermelho ▲ no segundo (em USD). Escolha a sugestão ou digite seus dois valores em Other (ex. \"5/20\").",
+  s5none: "Sem aviso",
+  s6: "Mostrar um aviso curto quando um limite passar de 75 %? Uma vez por limite e período, para notar sem olhar a barra.",
+  costWarn: "Aviso custo",
+  alerts: "Aviso limite",
+  names: { cost: 'custo', limits: 'limites', context: 'contexto', model: 'modelo', repo: 'projeto + git', duration: 'duração', resets: 'reinícios', lines: 'linhas alteradas', today: "total do dia", perline: "custo por linha" },
 }
 
 export const LANGS: Lang[] = [

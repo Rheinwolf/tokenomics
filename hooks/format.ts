@@ -31,6 +31,11 @@ export type Input = {
   rateSource?: string
   /** false hides "resets in …" behind the limits (default: shown unless compact). */
   resets?: boolean
+  /** Session cost in USD at which the cost turns yellow △ / red ▲. */
+  costWarn?: number | null
+  costAlert?: number | null
+  /** Cost of all sessions today on this computer, in USD. Shown when it exceeds this session. */
+  todayUsd?: number
 }
 
 /** "1h59m", "3d11h", "42m", "<1m". */
@@ -99,7 +104,8 @@ export function segments(i: Input): Segment[] {
     const hint = subscription
       ? 'Estimate at API list prices for this session only. On a subscription this is not billed: your plan price is not subtracted, so it is not a "saving".'
       : 'Client-side estimate at API list prices for this session. Your invoice is the final authority.'
-    out.push({ key: 'cost', text: `${label}: ${value}${note}`, level: 'ok', hint })
+    const level = costLevel(i.costUsd, i.costWarn, i.costAlert)
+    out.push({ key: 'cost', text: `${mark(level)}${label}: ${value}${note}`, level, hint })
   }
 
   for (const l of i.rateLimits) {
@@ -138,6 +144,18 @@ export function segments(i: Input): Segment[] {
       level: 'ok',
       hint: 'Uncommitted lines in the working copy (git diff against HEAD)',
     })
+    const lines = i.added + i.removed
+    if (typeof i.costUsd === 'number' && Number.isFinite(i.costUsd) && i.costUsd > 0 && lines > 0) {
+      const per = i.costUsd / lines
+      out.push({ key: 'perline', text: `$${per < 0.01 ? per.toFixed(4) : per.toFixed(2)} / line`, level: 'ok' })
+    }
+  }
+
+  if (
+    typeof i.todayUsd === 'number' && Number.isFinite(i.todayUsd) &&
+    i.todayUsd > (typeof i.costUsd === 'number' && Number.isFinite(i.costUsd) ? i.costUsd : 0) + 0.005
+  ) {
+    out.push({ key: 'today', text: `today ${money(i.todayUsd)}`, level: 'ok', hint: 'All sessions today on this computer' })
   }
 
   if (typeof i.startedAt === 'number') {
@@ -206,4 +224,70 @@ export function parseEcbRate(xml: string, currency: string): { rate: number; dat
   const target = /^[A-Z]{3}$/.test(currency) ? rateOf(currency) : null
   if (!date || !usd || !target) return null
   return { rate: Math.round((target / usd) * 10000) / 10000, date }
+}
+
+/** Cost warning: yellow at `warn`, red at `alert` (both USD, optional). */
+export function costLevel(cost: number, warn?: number | null, alert?: number | null): Level {
+  if (alert && cost >= alert) return 'alert'
+  if (warn && cost >= warn) return 'warn'
+  return 'ok'
+}
+
+/** "10/25", "10 25", "$5 - $20", "8" -> thresholds; null if unusable. One number = yellow only. */
+export function parseThresholds(s: unknown): { warn: number; alert: number | null } | null {
+  if (typeof s !== 'string') return null
+  const nums = (s.replace(/,/g, '.').match(/\d+(?:\.\d+)?/g) ?? []).map(Number).filter(n => Number.isFinite(n) && n > 0)
+  if (nums.length === 0 || nums.length > 2) return null
+  if (nums.length === 1) return { warn: nums[0], alert: null }
+  const [a, b] = nums
+  return a < b ? { warn: a, alert: b } : null
+}
+
+export type DayLog = { day: string; sessions: Record<string, number> }
+
+/** Local calendar day, "2026-11-26". */
+export function localDay(ms: number): string {
+  const d = new Date(ms)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Records one session's cost for the day; a new day starts empty. Bad stored data is dropped. */
+export function addToDay(raw: unknown, day: string, session: string, cost: number): DayLog {
+  const r = raw as Partial<DayLog> | null
+  const sessions: Record<string, number> = {}
+  if (r && r.day === day && r.sessions && typeof r.sessions === 'object') {
+    for (const [k, v] of Object.entries(r.sessions)) if (typeof v === 'number' && Number.isFinite(v) && v >= 0) sessions[k] = v
+  }
+  if (Number.isFinite(cost) && cost >= 0) sessions[session] = cost
+  return { day, sessions }
+}
+
+export function dayTotal(log: DayLog | null, day: string): number | undefined {
+  if (!log || log.day !== day) return undefined
+  return Object.values(log.sessions).reduce((a, b) => a + b, 0)
+}
+
+/**
+ * Limits that just went above `threshold` and were not announced yet in this reset period.
+ * `seen` maps limit kind -> the reset time already announced.
+ */
+export function limitAlerts(limits: readonly Limit[], seen: Record<string, string>, threshold = 75): { alerts: Limit[]; seen: Record<string, string> } {
+  const next = { ...seen }
+  const alerts: Limit[] = []
+  for (const l of limits) {
+    if (!LIMIT_LABEL[l.kind] || !Number.isFinite(l.percentUsed) || l.percentUsed <= threshold) continue
+    const period = l.resetsAt ?? 'unknown'
+    if (next[l.kind] === period) continue
+    next[l.kind] = period
+    alerts.push(l)
+  }
+  return { alerts, seen: next }
+}
+
+/** "▲ 5h limit 78% · resets in 1h20m" for the notice. */
+export function limitNotice(l: Limit, now: number): string {
+  let text = `▲ ${LIMIT_LABEL[l.kind] ?? l.kind} limit ${Math.round(l.percentUsed)}%`
+  const d = l.resetsAt ? duration(Date.parse(l.resetsAt) - now) : ''
+  if (d) text += ` · resets in ${d}`
+  return text
 }

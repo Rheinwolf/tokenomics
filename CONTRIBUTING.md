@@ -48,6 +48,8 @@ For a coverage report add `--experimental-test-coverage`. The same checks run au
 
 ### Versions
 
+Pushing a tag `vX.Y.Z` makes GitHub Actions run the checks and create the release with that version's section from `CHANGELOG.md` as notes; a missing section fails the release. Dependabot keeps the GitHub Actions up to date.
+
 Every release changes the version in all of these, and `test/version.test.ts` makes sure they match:
 
 - `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`

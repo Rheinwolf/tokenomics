@@ -2,12 +2,12 @@
 
 # Tokenomics
 
-**Version 0.6.1** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
+**Version 0.7.0** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.6.1  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.7.0  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -23,6 +23,8 @@ Tokenomics 0.6.1  ·  1h30m  ·  API value this session: $4.37 · covered by sub
 | Model | `Opus 5.5` | `$.session.model()` |
 | Project · branch · uncommitted | `LottoLabor · main ✗` | project root + git |
 | Lines | `+120 / −30 lines` | uncommitted git diff vs `HEAD`; per file in the [changes pane](#changes-pane) |
+| Cost per line | `$0.02 / line` | session cost ÷ changed lines |
+| Today | `today $12.40` | all sessions today on this computer, once there is more than one |
 | Duration | `1h30m` | session start time |
 
 Any value the app does not provide is simply left out. Nothing is guessed.
@@ -35,6 +37,8 @@ Limits (5h / 7d) and context use the same traffic light:
 - up to 50 %: green
 - up to 75 %: yellow + `△`
 - above 75 %: red + `▲`
+
+With a **cost warning** set in `/tokenomics-setup`, the cost uses the same signals: yellow `△` at the first amount, red `▲` at the second. A **limit notice** pops up once when a limit goes above 75 %.
 
 ## The cost figure
 
@@ -126,11 +130,15 @@ A short guided setup opens in Claude's own question dialog and asks, one step at
    - model
    - project + git branch
    - changed lines (`+120 / −30 lines`), only asked if project + git is *Yes*
+   - cost per changed line (`$0.02 / line`), only asked if changed lines is *Yes*
+   - today's total (`today $12.40`), all sessions today on this computer
    - session time
 
    The cost figure always shows.
-2. **Second currency** (optional): e.g. EUR, GBP, CHF or any code you type
-3. **Rate** for that currency: either a **fixed rate** you type (e.g. `0.92`), or, opt-in, the **daily reference rate of the European Central Bank** (one request per day to ecb.europa.eu, see [Privacy](#privacy)). The rate or `ECB <date>` is shown next to the converted value.
+2. **Cost warning**: the cost turns yellow `△` and red `▲` at two amounts in USD. Suggested `$10 / $25`, *No warning*, or type your own (e.g. `5/20`).
+3. **Limit notice**: a short notice when a 5h or 7d limit goes above 75 %, once per limit and reset period. Only asked if limits are shown.
+4. **Second currency** (optional): e.g. EUR, GBP, CHF or any code you type
+5. **Rate** for that currency: either a **fixed rate** you type (e.g. `0.92`), or, opt-in, the **daily reference rate of the European Central Bank** (one request per day to ecb.europa.eu, see [Privacy](#privacy)). The rate or `ECB <date>` is shown next to the converted value.
 
 Your choices are saved and apply to every session. Until you run the setup, everything is visible and only USD is shown.
 
@@ -182,7 +190,7 @@ Tokenomics starts exactly one program: **`git`**, and only these three read-only
 
 ### What it stores
 
-Only your setup choices (language, which items show, compact switch, currency and rate, whether the changes pane is open) and, if you opted in, the day's ECB rate for your currency, in Claude Code's local plugin store (`$.store`).
+Only your setup choices (language, which items show, compact switch, cost warning, limit notice, currency and rate, whether the changes pane is open), today's session costs for the daily total (one number per session, replaced the next day), which limit periods were already announced, and, if you opted in, the day's ECB rate for your currency, in Claude Code's local plugin store (`$.store`).
 
 ### What each hook does
 

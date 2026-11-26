@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+- Cost warning: the cost turns yellow △ and red ▲ at two amounts you choose in `/tokenomics-setup` (suggested $10 / $25, or type your own like `5/20`)
+- Today's total: `today $12.40` adds up all sessions today on this computer, shown once there is more than one. Stored locally, one number per session, replaced the next day
+- Limit notice: a short notice when a 5h or 7d limit goes above 75 %, once per limit and reset period
+- Cost per changed line: `$0.02 / line`, just for fun
+- Setup asks about the new items one by one, in all 8 languages
+- GitHub Actions updated to v5, kept current by Dependabot; pushing a version tag now creates the GitHub release from CHANGELOG.md automatically
+
 ## 0.6.1
 - Negative cost, limit or context values from Claude Code are now hidden instead of shown as `$-1.00` or `-1%`
 - An empty line in git's status output no longer adds a nameless entry to the changes pane

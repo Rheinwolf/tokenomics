@@ -1,0 +1,31 @@
+name: Release
+
+# Pushing a tag like v1.2.3 creates the GitHub release, with the notes taken
+# from that version's section in CHANGELOG.md. Fails if the section is missing.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Run all checks
+        run: node --test "test/*.test.ts"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="## $version" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "No CHANGELOG section for $version"; exit 1; fi
+          cat notes.md
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "Tokenomics ${GITHUB_REF_NAME#v}" --notes-file notes.md --verify-tag

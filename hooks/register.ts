@@ -1,8 +1,10 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { baseName, parseChanges, parseEcbRate, parseRate, segments } from './format.ts'
-import type { ChangedFile, Segment } from './format.ts'
+import {
+  addToDay, baseName, dayTotal, limitAlerts, limitNotice, localDay, parseChanges, parseEcbRate, parseRate, parseThresholds, segments,
+} from './format.ts'
+import type { ChangedFile, DayLog, Segment } from './format.ts'
 import { byCode, detectLanguage, ENGLISH, parseLanguage } from './lang.ts'
 import type { Item, Lang } from './lang.ts'
 import { explainText, VERSION } from './explain.ts'
@@ -18,6 +20,11 @@ type Config = {
   hidden: Group[]
   isSetUp: boolean
   lang: string
+  /** Session cost (USD) at which the cost turns yellow / red; null = no warning. */
+  costWarn: number | null
+  costAlert: number | null
+  /** Short notice when a usage limit goes above 75 %. */
+  alerts: boolean
 }
 type Repo = {
   project: string
@@ -38,16 +45,22 @@ const DEFAULTS: Config = {
   hidden: [],
   isSetUp: false,
   lang: 'en',
+  costWarn: null,
+  costAlert: null,
+  alerts: true,
 }
 const STORE_KEY = 'config'
 const ECB_KEY = 'ecb'
-const GROUPS: Group[] = ['limits', 'resets', 'context', 'model', 'repo', 'lines', 'duration']
+const DAY_KEY = 'day'
+const ALERTED_KEY = 'alerted'
+const GROUPS: Group[] = ['limits', 'resets', 'context', 'model', 'repo', 'lines', 'perline', 'today', 'duration']
 const PANE = 'tokenomics-changes'
 
 const tick = atom({ plugin: 'tokenomics-bar', key: 'tick' } as const, 0)
 const configAtom = atom({ plugin: 'tokenomics-bar', key: 'config' } as const, DEFAULTS as Config)
 const repoAtom = atom({ plugin: 'tokenomics-bar', key: 'repo' } as const, null as Repo)
 const ecbAtom = atom({ plugin: 'tokenomics-bar', key: 'ecb' } as const, null as Ecb)
+const dayAtom = atom({ plugin: 'tokenomics-bar', key: 'day' } as const, null as DayLog | null)
 
 function groupOf(key: string): Group | null {
   if (key.startsWith('limit-')) return 'limits'
@@ -56,6 +69,8 @@ function groupOf(key: string): Group | null {
   if (key === 'repo') return 'repo'
   if (key === 'lines') return 'lines'
   if (key === 'duration') return 'duration'
+  if (key === 'perline') return 'perline'
+  if (key === 'today') return 'today'
   return null
 }
 
@@ -71,6 +86,9 @@ function sanitize(raw: unknown): Config {
     hidden: Array.isArray(c.hidden) ? c.hidden.filter((g): g is Group => GROUPS.includes(g as Group)) : [],
     isSetUp: c.isSetUp === true,
     lang: byCode(typeof c.lang === 'string' ? c.lang : 'en').code,
+    costWarn: typeof c.costWarn === 'number' && c.costWarn > 0 ? c.costWarn : null,
+    costAlert: typeof c.costAlert === 'number' && c.costAlert > 0 ? c.costAlert : null,
+    alerts: c.alerts !== false,
   }
 }
 
@@ -153,6 +171,38 @@ async function refreshRate($: EngineInterface): Promise<void> {
   }
 }
 
+/** Today's total: each session's cost is stored under its start time, locally, for the current day only. */
+async function recordDay($: EngineInterface, write: boolean): Promise<void> {
+  try {
+    const day = localDay(await $.clock.now())
+    let log = (await $.store.get(DAY_KEY)) as DayLog | null
+    if (write) {
+      const usage = await $.session.usage()
+      const cost = usage.cost?.usd
+      if (typeof cost === 'number' && typeof usage.startedAt === 'number') {
+        log = addToDay(log, day, String(usage.startedAt), cost)
+        await $.store.set(DAY_KEY, log)
+      }
+    }
+    await update($, dayAtom, () => (log && log.day === day ? log : null))
+  } catch {}
+}
+
+/** A short notice once per limit and reset period when it goes above 75 %. */
+async function notifyLimits($: EngineInterface): Promise<void> {
+  try {
+    const config = await read($, configAtom)
+    if (!config.alerts || config.hidden.includes('limits')) return
+    const usage = await $.session.usage()
+    const seen = ((await $.store.get(ALERTED_KEY)) ?? {}) as Record<string, string>
+    const { alerts, seen: next } = limitAlerts(usage.rateLimits ?? [], seen && typeof seen === 'object' ? seen : {})
+    if (alerts.length === 0) return
+    await $.store.set(ALERTED_KEY, next)
+    const now = await $.clock.now()
+    for (const l of alerts) $.ui.toast(`Tokenomics: ${limitNotice(l, now)}`)
+  } catch {}
+}
+
 /** Text of the person's recent messages, for guessing their language. */
 async function recentUserText($: EngineInterface): Promise<string[]> {
   try {
@@ -190,14 +240,28 @@ async function runSetup($: EngineInterface): Promise<string> {
   // One yes/no question per item, each with its own explanation. "Other" text counts as yes.
   const hidden: Group[] = []
   for (const item of GROUPS) {
-    if (item === 'lines' && hidden.includes('repo')) {
-      hidden.push('lines') // changed lines come from git; no project + git, no lines
+    if ((item === 'lines' && hidden.includes('repo')) || (item === 'perline' && hidden.includes('lines'))) {
+      hidden.push(item) // changed lines come from git; no project + git, no lines, no cost per line
       continue
     }
     const answer = await $.ui.ask(step(t.items[item]), { header: t.names[item].slice(0, 12), options: [t.yes, t.no] })
     if (answer.trim() === t.no) hidden.push(item)
   }
   config.hidden = hidden
+
+  // Cost warning: suggestion, none, or two amounts typed under Other
+  const warnAnswer = (await $.ui.ask(step(t.s5), { header: t.costWarn.slice(0, 12), options: ['$10 / $25', t.s5none] })).trim()
+  const th = warnAnswer === t.s5none ? null : parseThresholds(warnAnswer)
+  config.costWarn = th ? th.warn : null
+  config.costAlert = th ? th.alert : null
+
+  // Limit notice (only meaningful when limits are shown)
+  if (!hidden.includes('limits')) {
+    const a = await $.ui.ask(step(t.s6), { header: t.alerts.slice(0, 12), options: [t.yes, t.no] })
+    config.alerts = a.trim() !== t.no
+  } else {
+    config.alerts = false
+  }
 
   // Second currency
   const cur = (await $.ui.ask(step(t.s3), { header: t.currency.slice(0, 12), options: [t.s3usd, 'EUR', 'GBP', 'CHF'] })).trim()
@@ -235,6 +299,8 @@ async function runSetup($: EngineInterface): Promise<string> {
     t.done,
     `  ${t.shows}: ${visible.join(', ')}`,
     `  ${t.currency}: ${currencyText}`,
+    `  ${t.costWarn}: ${config.costWarn ? `$${config.costWarn}${config.costAlert ? ` / $${config.costAlert}` : ''}` : t.s5none}`,
+    ...(hidden.includes('limits') ? [] : [`  ${t.alerts}: ${config.alerts ? t.yes : t.no}`]),
     '',
     t.outro,
   ].join('\n')
@@ -258,7 +324,7 @@ async function resetCommand($: EngineInterface) {
     await $.ui.close({ id: PANE })
   } catch {}
   return {
-    text: 'Tokenomics: back to defaults (everything visible, USD only, changes pane closed). Run /tokenomics-setup to choose again.',
+    text: 'Tokenomics: back to defaults (everything visible, USD only, no cost warning, limit notice on, changes pane closed). Run /tokenomics-setup to choose again.',
     isTextDisplayOnly: true as const,
   }
 }
@@ -311,6 +377,7 @@ export const register: Register = on => {
     }
     void refreshRepo($)
     void refreshRate($)
+    void recordDay($, false)
     if (config.showPane) void $.ui.open({ id: PANE, title: 'Changes' })
     return next(e)
   })
@@ -349,6 +416,8 @@ export const register: Register = on => {
   on('turn.complete', async ($, e, next) => {
     await refreshRepo($)
     await refreshRate($)
+    await recordDay($, true)
+    await notifyLimits($)
     await update($, tick, n => n + 1)
     return next(e)
   })
@@ -406,6 +475,7 @@ export const register: Register = on => {
       const config = await read($, configAtom)
       const repo = await read($, repoAtom)
       const ecb = await read($, ecbAtom)
+      const dayLog = await read($, dayAtom)
       const usage = await $.session.usage()
       let model: string | undefined
       try {
@@ -432,6 +502,9 @@ export const register: Register = on => {
         currency: config.currency || undefined,
         rate: live ? live.rate : (config.rate ?? undefined),
         rateSource: live ? `ECB ${live.date}` : undefined,
+        costWarn: config.costWarn,
+        costAlert: config.costAlert,
+        todayUsd: dayTotal(dayLog, localDay(now)),
       }).filter(s => {
         const g = groupOf(s.key)
         return g === null || !config.hidden.includes(g)
