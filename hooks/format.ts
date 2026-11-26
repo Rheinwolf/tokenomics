@@ -148,3 +148,16 @@ export function parseRate(s: unknown): number | undefined {
   const n = Number(s.trim().replace(',', '.'))
   return Number.isFinite(n) && n > 0 ? n : undefined
 }
+
+/** Sums `git diff --numstat` output ("12<TAB>3<TAB>file"); binary files ("-") count as 0. */
+export function parseNumstat(out: string): { added: number; removed: number } {
+  let added = 0
+  let removed = 0
+  for (const line of out.split(/\r?\n/)) {
+    const [a, r] = line.split('\t')
+    if (a === undefined || r === undefined) continue
+    added += Number(a) || 0
+    removed += Number(r) || 0
+  }
+  return { added, removed }
+}

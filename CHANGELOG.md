@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2
+- Install name is now `tokenomics-bar` (the name `tokenomics` was already taken in the plugin directory); the bar and the `/tokenomics…` commands are unchanged
+- Git info now comes from three read-only local git commands instead of an experimental interface
+- Author and icon in the manifest
+- README: privacy section (what is read, what is stored, what each hook does; nothing is sent)
+- Note: your saved setup starts fresh once because of the new name; run `/tokenomics-setup` again
+
 ## 0.4.1
 - The bar now starts with "Tokenomics <version>", followed by the session time
 - Removed the extra cost footnote in full mode (the same text is in `/tokenomics-explain`)

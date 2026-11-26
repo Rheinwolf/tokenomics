@@ -62,3 +62,8 @@ assert.equal(trafficLight(0), 'good'); assert.equal(trafficLight(50), 'good')
 assert.equal(trafficLight(50.5), 'warn'); assert.equal(trafficLight(75), 'warn')
 assert.equal(trafficLight(75.5), 'alert'); assert.equal(trafficLight(100), 'alert')
 console.log('Traffic light checks passed.')
+
+import { parseNumstat } from '../hooks/format.ts'
+assert.deepEqual(parseNumstat('12\t3\ta.ts\n-\t-\timg.png\n5\t0\tb.ts\n'), { added: 17, removed: 3 })
+assert.deepEqual(parseNumstat(''), { added: 0, removed: 0 })
+console.log('Numstat checks passed.')

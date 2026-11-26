@@ -1,11 +1,13 @@
+<img src=".claude-plugin/icon.png" width="96" alt="Tokenomics icon">
+
 # Tokenomics
 
-**Version 0.4.1** · MIT license · [Changelog](CHANGELOG.md)
+**Version 0.4.2** · MIT license · [Changelog](CHANGELOG.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.4.1  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.4.2  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -52,7 +54,7 @@ Type `/tokenomics-explain` for this explanation inside the app.
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install tokenomics --marketplace Rheinwolf/tokenomics
+/plugin install tokenomics-bar --marketplace Rheinwolf/tokenomics
 ```
 
 Answer `y` to add the marketplace, then pick a scope (user scope = every session).
@@ -60,7 +62,7 @@ Answer `y` to add the marketplace, then pick a scope (user scope = every session
 From a shell:
 
 ```
-claude plugin install tokenomics --marketplace Rheinwolf/tokenomics
+claude plugin install tokenomics-bar --marketplace Rheinwolf/tokenomics
 ```
 
 In the **desktop app** (where `/plugin` does not run): click **+** next to the prompt box → **Plugins** → **Add marketplace** with `Rheinwolf/tokenomics` → **Add plugin**.
@@ -108,7 +110,33 @@ Your choices are saved and apply to every session. Until you run the setup, the 
 
 ## Privacy
 
-Reads local session data only. Sends nothing, loads nothing from the internet, stores nothing but your own setup choices. If a value is missing or a call fails, the segment is hidden and the app is never disturbed.
+**Tokenomics sends nothing anywhere.** It makes no network requests, loads nothing from the internet and has no telemetry. Everything stays on your computer. If a value is missing or a call fails, that segment is hidden and the app is never disturbed.
+
+### What it reads
+
+| Data | Why | How |
+|---|---|---|
+| Session cost, 5h/7d limits, context fill, start time | the bar's figures | `$.session.usage()`, local to Claude Code |
+| Model name | the model segment | `$.session.model()` |
+| Project folder | its name for the project segment | `$.session.root()` |
+| Git branch and uncommitted changes | the `project · branch ✗` segment and `+/− lines` | three read-only git commands run locally in the project folder: `git rev-parse --abbrev-ref HEAD`, `git status --porcelain`, `git diff --numstat HEAD` |
+| Your last chat messages (text only) | **only during `/tokenomics-setup`**, to guess your language for the pre-selected option; counted locally, never stored or sent | `$.session.messages()` |
+
+### What it stores
+
+Only your setup choices (language, detail level, visible segments, currency and rate), in Claude Code's local plugin store (`$.store`).
+
+### What each hook does
+
+| Hook | What it does |
+|---|---|
+| `session.start` | registers the four `/tokenomics…` commands, loads your saved setup, reads the git info |
+| `command.run` | answers the four `/tokenomics…` commands only; it does not touch any other command |
+| `session.measure` | redraws the bar when cost, limits or context change |
+| `turn.complete` | refreshes the git info after each turn and redraws the bar |
+| `ui.render` (`AbovePrompt`) | draws the bar above the prompt |
+
+Tokenomics uses no other plugin and calls nothing outside Claude Code's own plugin interface.
 
 ## Development
 

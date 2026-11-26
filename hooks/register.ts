@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { baseName, parseRate, segments } from './format.ts'
+import { baseName, parseNumstat, parseRate, segments } from './format.ts'
 import type { Segment } from './format.ts'
 import { byCode, detectLanguage, ENGLISH, parseLanguage } from './lang.ts'
 import type { Lang } from './lang.ts'
@@ -24,9 +24,9 @@ const STORE_KEY = 'config'
 const ORDER: Detail[] = ['compact', 'normal', 'full']
 const GROUPS: Group[] = ['limits', 'context', 'model', 'repo', 'duration']
 
-const tick = atom({ plugin: 'tokenomics', key: 'tick' } as const, 0)
-const configAtom = atom({ plugin: 'tokenomics', key: 'config' } as const, DEFAULTS as Config)
-const repoAtom = atom({ plugin: 'tokenomics', key: 'repo' } as const, null as Repo)
+const tick = atom({ plugin: 'tokenomics-bar', key: 'tick' } as const, 0)
+const configAtom = atom({ plugin: 'tokenomics-bar', key: 'config' } as const, DEFAULTS as Config)
+const repoAtom = atom({ plugin: 'tokenomics-bar', key: 'repo' } as const, null as Repo)
 
 
 function groupOf(key: string): Group | null {
@@ -71,16 +71,17 @@ async function refreshRepo($: EngineInterface): Promise<void> {
   try {
     const root = await $.session.root()
     const repo = { project: baseName(root), branch: null as string | null, dirty: false, added: 0, removed: 0 }
-    const copy = await $.vcs.detect({ path: root })
-    if (copy) {
-      repo.branch = copy.branch ?? null
-      const diff = await $.vcs.diff({ path: root, vcs: copy.vcs, base: 'head', isStatOnly: true })
-      if (diff.files) {
-        repo.dirty = diff.files.length > 0
-        for (const f of diff.files) {
-          repo.added += f.added || 0
-          repo.removed += f.removed || 0
-        }
+    // Three read-only git commands, run locally in the project folder. Nothing leaves the machine.
+    const branch = await $.process.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, timeoutMs: 5000 })
+    if (branch.exitCode === 0) {
+      repo.branch = branch.stdout.trim() || null
+      const status = await $.process.run(['git', 'status', '--porcelain'], { cwd: root, timeoutMs: 5000 })
+      repo.dirty = status.exitCode === 0 && status.stdout.trim().length > 0
+      const numstat = await $.process.run(['git', 'diff', '--numstat', 'HEAD'], { cwd: root, timeoutMs: 5000 })
+      if (numstat.exitCode === 0) {
+        const counts = parseNumstat(numstat.stdout)
+        repo.added = counts.added
+        repo.removed = counts.removed
       }
     }
     await update($, repoAtom, () => repo)
