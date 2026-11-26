@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.7
+- README links to the new [wiki](https://github.com/Rheinwolf/tokenomics/wiki): installation, setup, commands, the cost figure, traffic light, privacy, troubleshooting, FAQ and translations
+
 ## 0.4.6
 - Community files: Code of Conduct, contributing guide, accessibility statement
 - Issue forms for bug reports and feature requests, a security contact link, and a pull request template
