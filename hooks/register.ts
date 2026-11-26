@@ -6,14 +6,14 @@ import { baseName, parseRate, segments } from './format.ts'
 type Detail = 'compact' | 'normal' | 'full'
 type Repo = { project: string; branch: string | null; dirty: boolean; added: number; removed: number } | null
 
-const tick = atom({ plugin: 'session-bar', key: 'tick' } as const, 0)
-const detailAtom = atom({ plugin: 'session-bar', key: 'detail' } as const, null as Detail | null)
-const repoAtom = atom({ plugin: 'session-bar', key: 'repo' } as const, null as Repo)
+const tick = atom({ plugin: 'tokenomics', key: 'tick' } as const, 0)
+const detailAtom = atom({ plugin: 'tokenomics', key: 'detail' } as const, null as Detail | null)
+const repoAtom = atom({ plugin: 'tokenomics', key: 'repo' } as const, null as Repo)
 
 const ORDER: Detail[] = ['compact', 'normal', 'full']
 
 const EXPLAIN = [
-  'Session bar: how the cost figure works',
+  'Tokenomics: how the cost figure works',
   '',
   '- "API cost this session": you pay per token (API billing). The figure is a',
   '  client-side estimate at list prices; your invoice is the final authority.',
@@ -25,7 +25,7 @@ const EXPLAIN = [
   '- The second currency (if set) uses the fixed rate from the settings; no live',
   '  rates are fetched. The bar only reads local session data and sends nothing.',
   '',
-  'Commands: /session-bar (cycle compact > normal > full), /session-bar explain',
+  'Commands: /tokenomics (cycle compact > normal > full), /tokenomics explain',
 ].join('\n')
 
 async function refreshRepo($: EngineInterface): Promise<void> {
@@ -59,7 +59,7 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     try {
       await $.command.register({
-        name: 'session-bar',
+        name: 'tokenomics',
         description: 'Cycle the session bar detail (compact/normal/full); "explain" explains the cost figure',
       })
     } catch {}
@@ -67,7 +67,7 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  on('command.run', { command: 'session-bar' }, async ($, e) => {
+  on('command.run', { command: 'tokenomics' }, async ($, e) => {
     const arg = String((e as { args?: string }).args ?? '').trim().toLowerCase()
     if (arg === 'explain' || arg === 'help') return { text: EXPLAIN }
     const current = (await read($, detailAtom)) ?? configured
@@ -75,7 +75,7 @@ export const register: Register = (on, options) => {
       ? (arg as Detail)
       : ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]
     await update($, detailAtom, () => nextLevel)
-    return { text: `Session bar: ${nextLevel}` }
+    return { text: `Tokenomics: ${nextLevel}` }
   })
 
   on('session.measure', async ($, e, next) => {
@@ -131,11 +131,11 @@ export const register: Register = (on, options) => {
         Box,
         { flexDirection: 'column' },
         row,
-        h(Text, { dimColor: true }, 'Cost is an estimate at API list prices for this session only. /session-bar explain'),
+        h(Text, { dimColor: true }, 'Cost is an estimate at API list prices for this session only. /tokenomics explain'),
       )
     } catch (err) {
       const { Text } = $.ui.resolve(e)
-      return h(Text, { color: 'error' }, 'session-bar error: ' + String(err).slice(0, 200))
+      return h(Text, { color: 'error' }, 'tokenomics error: ' + String(err).slice(0, 200))
     }
   })
 }

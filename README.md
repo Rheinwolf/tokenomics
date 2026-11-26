@@ -1,6 +1,6 @@
-# Session Bar
+# Tokenomics
 
-A calm, readable bar above the prompt in the **Claude desktop app** (Code tab) that shows what is going on in the current session:
+*Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
 API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗  ·  1h30m
@@ -8,7 +8,7 @@ API value this session: $4.37 · covered by subscription  ·  5h limit 41% · re
 
 <!-- Screenshot: docs/screenshot.png -->
 
-The terminal `statusLine` setting does not appear in the desktop app. Session Bar is a mod (plugin hooks module) that draws there instead, and it also works in the terminal.
+The terminal `statusLine` setting does not appear in the desktop app. Tokenomics is a mod (plugin hooks module) that draws there instead, and it also works in the terminal.
 
 ## What it shows
 
@@ -33,7 +33,7 @@ Colour is never the only signal — a symbol is added too:
 
 ## The cost figure
 
-Claude Code always computes a session cost at API list prices — even on a subscription. Session Bar detects the billing type itself:
+Claude Code always computes a session cost at API list prices — even on a subscription. Tokenomics detects the billing type itself:
 
 - **Subscription** (detected because 5h/7d limit data is present):
   `API value this session: $4.37 · covered by subscription`
@@ -42,14 +42,14 @@ Claude Code always computes a session cost at API list prices — even on a subs
   A client-side estimate. Your invoice is the final authority.
 - A trailing `*` means a model with no known price was counted at another model's rates.
 
-Type `/session-bar explain` for this explanation inside the app.
+Type `/tokenomics explain` for this explanation inside the app.
 
 ## Install
 
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install session-bar --marketplace Rheinwolf/session-bar
+/plugin install tokenomics --marketplace Rheinwolf/tokenomics
 ```
 
 Answer `y` to add the marketplace, then pick a scope (user scope = every session).
@@ -57,17 +57,17 @@ Answer `y` to add the marketplace, then pick a scope (user scope = every session
 From a shell:
 
 ```
-claude plugin install session-bar --marketplace Rheinwolf/session-bar
+claude plugin install tokenomics --marketplace Rheinwolf/tokenomics
 ```
 
-In the **desktop app** (where `/plugin` does not run): click **+** next to the prompt box → **Plugins** → **Add marketplace** with `Rheinwolf/session-bar` → **Add plugin**.
+In the **desktop app** (where `/plugin` does not run): click **+** next to the prompt box → **Plugins** → **Add marketplace** with `Rheinwolf/tokenomics` → **Add plugin**.
 
 Installed at the user scope from a terminal, the bar also shows in the desktop app's Code tab.
 
 ### For development
 
 ```
-claude --plugin-dir /path/to/session-bar
+claude --plugin-dir /path/to/tokenomics
 ```
 
 or add the folder to the `CLAUDE_CODE_PLUGIN_DIRS` environment variable.
@@ -83,9 +83,9 @@ or add the folder to the `CLAUDE_CODE_PLUGIN_DIRS` environment variable.
 The second currency always shows the fixed rate you entered (in full mode next to the value). No live rates are fetched.
 
 Commands:
-- `/session-bar` — cycle compact → normal → full
-- `/session-bar full` — jump to a level
-- `/session-bar explain` — explain the cost figure
+- `/tokenomics` — cycle compact → normal → full
+- `/tokenomics full` — jump to a level
+- `/tokenomics explain` — explain the cost figure
 
 ## Privacy
 

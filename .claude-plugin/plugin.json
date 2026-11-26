@@ -1,7 +1,7 @@
 {
-  "name": "session-bar",
+  "name": "tokenomics",
   "version": "0.1.0",
-  "description": "A calm session bar above the prompt: API cost (or API value on a subscription), 5h/7d limits, context, model, git and duration.",
+  "description": "Token economics at a glance: a calm bar above the prompt with API cost (or API value on a subscription), 5h/7d limits, context, model, git and duration.",
   "license": "MIT",
   "userConfig": {
     "detail": {

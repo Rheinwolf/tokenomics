@@ -1,5 +1,5 @@
 {
-  "name": "session-bar",
-  "owner": { "name": "Session Bar contributors" },
-  "plugins": [{ "name": "session-bar", "source": "./" }]
+  "name": "tokenomics",
+  "owner": { "name": "Tokenomics contributors" },
+  "plugins": [{ "name": "tokenomics", "source": "./" }]
 }
