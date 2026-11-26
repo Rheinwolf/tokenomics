@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.8
+- README and wiki: clearer installation guide: which way fits which use (desktop app, terminal, team project, development), the three scopes, and what to do when `claude` is not recognized
+
 ## 0.4.7
 - README links to the new [wiki](https://github.com/Rheinwolf/tokenomics/wiki): installation, setup, commands, the cost figure, traffic light, privacy, troubleshooting, FAQ and translations
 

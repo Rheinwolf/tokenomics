@@ -2,12 +2,12 @@
 
 # Tokenomics
 
-**Version 0.4.7** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
+**Version 0.4.8** · MIT license · [Wiki](https://github.com/Rheinwolf/tokenomics/wiki) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Accessibility](ACCESSIBILITY.md)
 
 *Token + economics:* a calm, readable bar above the prompt in Claude Code (desktop app and terminal) that shows what the current session costs and how much of your limits it uses:
 
 ```
-Tokenomics 0.4.7  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
+Tokenomics 0.4.8  ·  1h30m  ·  API value this session: $4.37 · covered by subscription  ·  5h limit 41% · resets in 1h59m  ·  7d limit 17% · resets in 3d11h  ·  context 38%  ·  Opus 5.5  ·  LottoLabor · main ✗
 ```
 
 <!-- Screenshot: docs/screenshot.png -->
@@ -51,31 +51,62 @@ Type `/tokenomics-explain` for this explanation inside the app.
 
 ## Install
 
-At the prompt of a Claude Code terminal session:
+### Which way is right for you?
+
+| You use Claude Code … | Install this way |
+|---|---|
+| only in the **Claude desktop app** (Code tab) | [A: desktop app](#a-desktop-app) |
+| in a **terminal** (the `claude` command) | [B: terminal](#b-terminal), choose the **user** scope |
+| in **both** | B with the **user** scope covers both, or A in the app |
+| for a **team project**, so everyone in the repository gets it | [B](#b-terminal) with the **project** scope |
+| to **work on Tokenomics itself** | [C: development](#c-development) |
+
+### A: Desktop app
+
+The desktop app has no `/plugin` command and needs no terminal:
+
+1. Click **+** next to the prompt box.
+2. Choose **Plugins** → **Add marketplace** and enter `Rheinwolf/tokenomics`.
+3. Click **Install** (or **Add plugin**) next to `tokenomics-bar`.
+4. Type `/tokenomics-setup` to choose what the bar shows.
+
+### B: Terminal
+
+This needs the Claude Code command-line tool, i.e. the `claude` command. If your terminal says *"claude" is not recognized* (or *command not found*), it is not installed: either use [A](#a-desktop-app), or install it first following [Anthropic's setup guide](https://code.claude.com/docs/en/setup).
+
+Inside a Claude Code session in the terminal:
 
 ```
 /plugin install tokenomics-bar --marketplace Rheinwolf/tokenomics
 ```
 
-Answer `y` to add the marketplace, then pick a scope (user scope = every session).
-
-From a shell:
+or straight from the shell (PowerShell, bash, zsh):
 
 ```
 claude plugin install tokenomics-bar --marketplace Rheinwolf/tokenomics
 ```
 
-In the **desktop app** (where `/plugin` does not run): click **+** next to the prompt box → **Plugins** → **Add marketplace** with `Rheinwolf/tokenomics` → **Add plugin**.
+Answer `y` to add the marketplace, then choose a scope:
 
-Installed at the user scope from a terminal, the bar also shows in the desktop app's Code tab.
+| Scope | Where the bar is active | Good for |
+|---|---|---|
+| **User** (recommended) | every session and every project on this computer, in the terminal and in the desktop app's Code tab | yourself |
+| **Project** | only in this project, for everyone who uses the repository (saved in the project's settings) | teams |
+| **Local** | only in this project, only for you | trying it out in one project |
 
-### For development
+### C: Development
+
+To run Tokenomics from a folder while you change it, see [CONTRIBUTING.md](CONTRIBUTING.md):
 
 ```
 claude --plugin-dir /path/to/tokenomics
 ```
 
-or add the folder to the `CLAUDE_CODE_PLUGIN_DIRS` environment variable.
+### After installing
+
+- Your setup choices (language, detail level, segments, currency) are saved once and apply in every session and project.
+- You can switch Tokenomics off any time in Claude Code's plugin management, also for single projects.
+- Updates arrive through the plugin management. The bar always starts with its version, `Tokenomics x.y.z`.
 
 ## Setup
 
