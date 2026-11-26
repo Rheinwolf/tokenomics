@@ -44,7 +44,7 @@ const EXPLAIN = [
   '  /tokenomics-setup     step-by-step setup',
   '  /tokenomics           cycle compact > normal > full',
   '  /tokenomics full      jump to a level (compact, normal, full)',
-  '  /tokenomics explain   this text',
+  '  /tokenomics-explain   this text',
   '  /tokenomics reset     back to defaults',
 ].join('\n')
 
@@ -187,8 +187,7 @@ async function runSetup($: EngineInterface): Promise<string> {
     `  ${t.currency}: ${config.currency && config.rate ? `USD + ${config.currency} (1 USD = ${config.rate} ${config.currency})` : t.usdOnly}`,
     '',
     t.outro,
-  ].join('
-')
+  ].join('\n')
 }
 
 async function setupCommand($: EngineInterface) {
@@ -205,13 +204,19 @@ export const register: Register = on => {
     try {
       await $.command.register({
         name: 'tokenomics',
-        description: 'Tokenomics bar: "explain" for the cost figure, "compact/normal/full" to switch, no argument cycles the level',
+        description: 'Switch the Tokenomics bar: compact, normal or full (no argument cycles through them)',
       })
     } catch {}
     try {
       await $.command.register({
         name: 'tokenomics-setup',
         description: 'Set up the Tokenomics bar step by step (language, detail level, segments, currency)',
+      })
+    } catch {}
+    try {
+      await $.command.register({
+        name: 'tokenomics-explain',
+        description: 'Explain the Tokenomics cost figure (API cost vs. API value on a subscription)',
       })
     } catch {}
     const config = await loadConfig($)
@@ -240,7 +245,9 @@ export const register: Register = on => {
     return { text: `Tokenomics: ${nextLevel}`, isTextDisplayOnly: true }
   })
 
-  on('command.run', { command: 'tokenomics-setup' }, async $ => setupCommand($))
+  on('command.run', { command: 'tokenomics-setup' }, async ($, e) => setupCommand($))
+
+  on('command.run', { command: 'tokenomics-explain' }, async ($, e) => ({ text: EXPLAIN, isTextDisplayOnly: true as const }))
 
   on('session.measure', async ($, e, next) => {
     await update($, tick, n => n + 1)
@@ -301,7 +308,7 @@ export const register: Register = on => {
         Box,
         { flexDirection: 'column' },
         row,
-        h(Text, { dimColor: true }, 'Cost is an estimate at API list prices for this session only. /tokenomics explain'),
+        h(Text, { dimColor: true }, 'Cost is an estimate at API list prices for this session only. /tokenomics-explain'),
       )
     } catch (err) {
       const { Text } = $.ui.resolve(e)

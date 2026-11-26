@@ -53,7 +53,7 @@ const EN: Strings = {
   shows: 'Shows',
   currency: 'Currency',
   usdOnly: 'USD only',
-  outro: 'Change it any time with /tokenomics-setup. /tokenomics explain explains the cost figure.',
+  outro: 'Change it any time with /tokenomics-setup. /tokenomics-explain explains the cost figure.',
   cancelled: 'Tokenomics setup cancelled. Nothing was changed.',
   names: { cost: 'cost', limits: 'limits', context: 'context', model: 'model', repo: 'project + git', duration: 'session time' },
 }
@@ -83,7 +83,7 @@ const DE: Strings = {
   shows: 'Zeigt',
   currency: 'Währung',
   usdOnly: 'nur USD',
-  outro: 'Jederzeit änderbar mit /tokenomics-setup. /tokenomics explain erklärt die Kosten-Anzeige.',
+  outro: 'Jederzeit änderbar mit /tokenomics-setup. /tokenomics-explain erklärt die Kosten-Anzeige.',
   cancelled: 'Einrichtung abgebrochen. Nichts wurde geändert.',
   names: { cost: 'Kosten', limits: 'Kontingente', context: 'Kontext', model: 'Modell', repo: 'Projekt + Git', duration: 'Sitzungsdauer' },
 }
@@ -113,7 +113,7 @@ const FR: Strings = {
   shows: 'Affiche',
   currency: 'Devise',
   usdOnly: 'USD seulement',
-  outro: 'Modifiable à tout moment avec /tokenomics-setup. /tokenomics explain explique le coût.',
+  outro: 'Modifiable à tout moment avec /tokenomics-setup. /tokenomics-explain explique le coût.',
   cancelled: 'Configuration annulée. Rien n’a été modifié.',
   names: { cost: 'coût', limits: 'limites', context: 'contexte', model: 'modèle', repo: 'projet + git', duration: 'durée' },
 }
@@ -143,7 +143,7 @@ const ES: Strings = {
   shows: 'Muestra',
   currency: 'Moneda',
   usdOnly: 'solo USD',
-  outro: 'Cámbialo cuando quieras con /tokenomics-setup. /tokenomics explain explica el coste.',
+  outro: 'Cámbialo cuando quieras con /tokenomics-setup. /tokenomics-explain explica el coste.',
   cancelled: 'Configuración cancelada. No se cambió nada.',
   names: { cost: 'coste', limits: 'límites', context: 'contexto', model: 'modelo', repo: 'proyecto + git', duration: 'duración' },
 }
@@ -173,7 +173,7 @@ const IT: Strings = {
   shows: 'Mostra',
   currency: 'Valuta',
   usdOnly: 'solo USD',
-  outro: 'Modificabile in ogni momento con /tokenomics-setup. /tokenomics explain spiega il costo.',
+  outro: 'Modificabile in ogni momento con /tokenomics-setup. /tokenomics-explain spiega il costo.',
   cancelled: 'Configurazione annullata. Nulla è stato modificato.',
   names: { cost: 'costo', limits: 'limiti', context: 'contesto', model: 'modello', repo: 'progetto + git', duration: 'durata' },
 }
@@ -203,7 +203,7 @@ const PL: Strings = {
   shows: 'Pokazuje',
   currency: 'Waluta',
   usdOnly: 'tylko USD',
-  outro: 'Zmień w każdej chwili przez /tokenomics-setup. /tokenomics explain wyjaśnia koszt.',
+  outro: 'Zmień w każdej chwili przez /tokenomics-setup. /tokenomics-explain wyjaśnia koszt.',
   cancelled: 'Konfiguracja przerwana. Nic nie zostało zmienione.',
   names: { cost: 'koszt', limits: 'limity', context: 'kontekst', model: 'model', repo: 'projekt + git', duration: 'czas sesji' },
 }
@@ -233,7 +233,7 @@ const NL: Strings = {
   shows: 'Toont',
   currency: 'Valuta',
   usdOnly: 'alleen USD',
-  outro: 'Altijd te wijzigen met /tokenomics-setup. /tokenomics explain legt de kosten uit.',
+  outro: 'Altijd te wijzigen met /tokenomics-setup. /tokenomics-explain legt de kosten uit.',
   cancelled: 'Instellen geannuleerd. Er is niets gewijzigd.',
   names: { cost: 'kosten', limits: 'limieten', context: 'context', model: 'model', repo: 'project + git', duration: 'sessieduur' },
 }
@@ -263,7 +263,7 @@ const PT: Strings = {
   shows: 'Mostra',
   currency: 'Moeda',
   usdOnly: 'só USD',
-  outro: 'Altere quando quiser com /tokenomics-setup. /tokenomics explain explica o custo.',
+  outro: 'Altere quando quiser com /tokenomics-setup. /tokenomics-explain explica o custo.',
   cancelled: 'Configuração cancelada. Nada foi alterado.',
   names: { cost: 'custo', limits: 'limites', context: 'contexto', model: 'modelo', repo: 'projeto + git', duration: 'duração' },
 }

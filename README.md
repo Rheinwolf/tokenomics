@@ -40,7 +40,7 @@ Claude Code always computes a session cost at API list prices — even on a subs
   A client-side estimate. Your invoice is the final authority.
 - A trailing `*` means a model with no known price was counted at another model's rates.
 
-Type `/tokenomics explain` for this explanation inside the app.
+Type `/tokenomics-explain` for this explanation inside the app.
 
 ## Install
 
@@ -98,7 +98,7 @@ Your choices are saved and apply to every session. Until you run the setup, the 
 | `/tokenomics-setup` | guided setup (also `/tokenomics setup`) |
 | `/tokenomics` | cycle compact → normal → full |
 | `/tokenomics compact` · `normal` · `full` | jump to a level |
-| `/tokenomics explain` | explain the cost figure |
+| `/tokenomics-explain` | explain the cost figure |
 | `/tokenomics reset` | back to defaults |
 
 ## Privacy
@@ -110,6 +110,7 @@ Reads local session data only. Sends nothing, loads nothing from the internet, s
 ```
 node test/format.check.ts
 node test/lang.check.ts
+node test/syntax.check.ts
 ```
 
 runs the formatter against sample data (subscription, API billing, missing values, Windows paths).
